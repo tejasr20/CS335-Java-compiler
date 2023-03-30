@@ -1,0 +1,11 @@
+lexer.cpp
+parser.*pp
+*.dot
+*.ps
+*.png
+*.csv
+/bin/*
+.vscode
+*.csv
+*.out
+ans

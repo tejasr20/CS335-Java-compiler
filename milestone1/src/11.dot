@@ -1,0 +1,8 @@
+digraph AST {
+	ordering=out;
+	1 [label="IDENTIFIER(mypack)" shape=box style=filled color="dodgerblue" fillcolor="lightgreen"];
+	2 [label="(package)" shape=box style=filled color="dodgerblue" fillcolor="lightgreen"];
+	3 [label="PackageDecn"];
+	3 -> 2;
+	3 -> 1;
+}
