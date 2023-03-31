@@ -7,7 +7,7 @@ using namespace std;
 #include <vector>
 #include <unordered_map>
 #include "tree.h"
-#include "parser.hpp"
+#include "parser.h"
 #include "symbol_table.h"
 int yylex();
 void help();

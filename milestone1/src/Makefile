@@ -5,7 +5,7 @@ ans: parser.cpp scanner.cpp tree.cpp
 	$(CC) -o $@ $^
 
 scanner.cpp: scanner.l
-	flex -o $@ $^
+	flex -o$@ $^
 	
 parser.cpp: parser.y
 	bison -d -o $@ $^
