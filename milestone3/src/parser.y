@@ -706,7 +706,6 @@ ClassBody  :  OC CC 	{$$ = create_AST_leaf("{ }", "LITERAL");}
 			}
 		}											
 				   ;													
-		   ;
 
 ClassBodyDecRec  :  ClassBodyDec 	{$$ = $1;}													
 			  |  ClassBodyDecRec  NEXT_QUAD ClassBodyDec 	{
@@ -2044,7 +2043,6 @@ StmtExpr : ClassCreation 	{$$ = $1;}
 					|  Assign 		{$$ = $1;}												
 					;
 
-		;
 IfThenStmt : IF_CODE NEXT_QUAD Stmt 	{
 		vector<treeNode> v;
 		add_attribute(v, $1, "", 1);
@@ -4572,7 +4570,7 @@ PostDecrementExpr : PostfixExpr MINUSMINUS { // TYPECHECK
 							$$->is_error = 1;
 						}
 				};							
-						;
+						
 
 CastExpr : OS PrimitiveType Dims CS UnaryExpr { // TYPECASTING	
 		vector<treeNode> attr;

@@ -1,5 +1,5 @@
 %{
-// #include<bits/stdc++.h>
+#include<bits/stdc++.h>
 #include<iostream>
 #include <stdio.h>
 #include <string>
@@ -325,7 +325,7 @@ IntfaceTypeList  :  IntfaceType 	{$$ = $1;}
 ClassBody  :  OC CC 	{$$ = create_AST_leaf("{ }", "LITERAL");}																				
 		   |  OC ClassBodyDecRec CC 		{$$=$2;}											
 				   ;													
-		   ;
+		   
 
 ClassBodyDecRec  :  ClassBodyDec 	{$$ = $1;}													
 			  |  ClassBodyDecRec ClassBodyDec 	{
@@ -1531,7 +1531,7 @@ PostDecrementExpr : PostfixExpr MINUSMINUS {
 						add_attribute(attr, $1, "", 1);
 						$$ = create_AST_node($2, attr);
 				};							
-						;
+						
 
 CastExpr : OS PrimitiveType Dims CS UnaryExpr {
 		vector<treeNode> attr;

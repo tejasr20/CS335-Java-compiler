@@ -1,5 +1,5 @@
 %{
-// #include<bits/stdc++.h>
+#include<bits/stdc++.h>
 // {Comment}				{yylval.str = strdup(yytext); return COMMENT;}
 #include<iostream>
 #include <stdio.h>
@@ -8,7 +8,7 @@ using namespace std;
 #include <vector>
 #include <unordered_map>
 #include "tree.h"
-#include "parser.hpp"
+#include "parser.h"
 // #include "mini.tab.h"
 int yylex();
 void help();
