@@ -11,7 +11,7 @@
 #include "symbol_table.h"
 #include "typecheck.h"
 #include "3ac.h"
-
+set<string> is_static;
 using namespace std;
 extern int yylineno;
 extern FILE* yyin;
@@ -42,7 +42,9 @@ int previous_if_found = 0;
 int stop_compiler = 0;		// shows error while parsing
 int isArray = 0;			// true when array is declared
 int type_delim = 0;	
-int debug_mode = 0;		
+int debug_mode = 0;	
+int param_size= 0;
+int func_size= 0;
 
 string funcName = ""; // global variables. 
 string className= "";
@@ -205,7 +207,8 @@ PrimitiveType  : Numbers 	{$$ = $1;}		 // type name as string has been stored in
 									if(type == "") type ="int";
 									else type += " int";
 									// boolean treated as one byte
-									$$->size= 1;
+									$$->size= 4;
+									$$->type= "bool";
 							}  															
 			   ;
 
@@ -221,6 +224,7 @@ Integers  :  LONG 	{
 							// long long not likely to occur 
 							else type += " " + string($1);
 							$$->size= 8;
+							$$->type= "long";
 					}																				
 			  |  BYTE 	{ 
 				  			$$ = create_AST_leaf($1, "BYTE");
@@ -229,6 +233,7 @@ Integers  :  LONG 	{
 							if(type == "") type = string($1);
 							else type += " " + string($1);
 							$$->size= 1;
+							$$->type= "byte";
 				  } 																				
 			  |  INT 	{ 
 							$$ = create_AST_leaf($1, "INT"); 
@@ -237,6 +242,7 @@ Integers  :  LONG 	{
 							if(type == "") type = string($1);
 							else type += " " + string($1);
 							$$->size= 4;
+							$$->type= "int";
 					}																				
 			  |  CHAR 	{ 
 				  			$$ = create_AST_leaf($1, "CHAR");
@@ -245,6 +251,7 @@ Integers  :  LONG 	{
 							if(type == "") type = string($1);
 							else type += " " + string($1);
 							$$->size= 1;
+							$$->type= "char";
 				 }																				
 			  |  SHORT 	{ 
 				  			$$ = create_AST_leaf($1, "SHORT"); 
@@ -253,6 +260,7 @@ Integers  :  LONG 	{
 							if(type == "") type = string($1);
 							else type += " " + string($1);
 							$$->size= 2;
+							$$->type= "short";
 			  }
 				| STRING {
 								$$ = create_AST_leaf($1, "STRING"); 
@@ -261,6 +269,7 @@ Integers  :  LONG 	{
 								if(type == "") type = "char*";
 								else type += " char*";
 								$$->size= 8;
+								$$->type= "String";
 			  }																		
 			  ;
 
@@ -470,6 +479,7 @@ Modifier  :  FINAL 				{
 										$$ = create_AST_leaf($1, "FINAL");
 										// Semantic
 										$$->type= string($1);
+										// $$->modifiers[0]=1;
 				 }																			
 		  |  PRIVATE 		{ 
 			  						$$ = create_AST_leaf($1, "PRIVATE");
@@ -827,6 +837,7 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 										}
 										else $$->is_error = 1;
 }														
+
 					|  VariableDecltrId EQUALS NEXT_QUAD VariableInit {
 		vector<treeNode> v;
 		add_attribute(v, $1, "", 1);
@@ -1040,7 +1051,7 @@ MethodDecn  :  MethodHead F MethodBody {
 
 F: 				{
 						$$ = new Node();
-						// clear_paramoffset();
+						clear_paramoffset();
 						// param_offset = -4;
 						
 						if (gst.find(funcName) != gst.end()){
@@ -1050,8 +1061,16 @@ F: 				{
 						else{
 							// cout<<""
 							CreateSymbolTable(funcName, funcType,1, 1);
+							sym_entry* sym= Lookup(funcName);
+							cout<<"Here "<<sym->type<<endl;
+							cout<<"Param size is "<<param_size<<endl;
+							sym->paramsize= param_size;
+							// cout<<"Function locals and temporaries size is "<<sym->size<<endl;
+							// sym->funcsize= sym->size;
+							// cout<<"sehhhh is "<<param_size<<endl;
+							param_size=0;
 							$$->name = (funcName);
-							block_count = 1;
+							block_count = 1; 
 							type = "";
 							type_delim = 0;
 						}
@@ -1114,7 +1133,9 @@ MethodHead  :  Modifiers Type MethodDecltr Throws {
 		add_attribute(v, $1, "", 1);
 		add_attribute(v, $2, "", 1);
 		add_attribute(v, $3, "", 1);
+		cout<<"------**   "<<$3->temp_name<<"\n";
 		$$ = create_AST_node("MethodHead3", v);
+		// if($1 == "static")is_static.insert($3);
 	}																									
 			  																											
 			  ;
@@ -1165,7 +1186,10 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 					//3AC
 					$$->place = qid($$->temp_name, NULL);
 					backpatch($4->nextlist,$6);
-					emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
+					cout<<"IN INII "<<funcName<<endl;
+					sym_entry* sym= Lookup(funcName);
+					if(sym==nullptr) cout<<"THIS IS NULL BRO1\n";
+					emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",sym),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
 					// cout<<"CRASH\n";
 				}
 				else{
@@ -1178,7 +1202,9 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 						//3AC
 						$$->place = qid($$->temp_name, NULL);
 						backpatch($4->nextlist,$6);
-						emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
+						sym_entry* sym= Lookup($1->temp_name);
+						if(sym==nullptr) cout<<"THIS IS NULL BRO\n";
+						emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",sym),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
 					}
 					else {
 						yyerror(("Conflicting types for function " + $1->temp_name).c_str());
@@ -1277,7 +1303,7 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 
 M: 							{
 	type ="";
-	cout<<"Function flag set to zero in func declaration\n";
+	// cout<<"Function flag set to zero in func declaration\n";
 		func_flag = 0;
 		funcArgs.clear();
 		CreateParameterList();
@@ -1320,8 +1346,9 @@ FormalParam  :  Type VariableDecltrId 			{
 					$$->is_error = 1;
 				}
 				else {
-					// paramInsert(*curr_table, $2->temp_name, $2->type, $2->size, true, NULL);
-					insertSymbol(*curr_table, $2->temp_name, $2->type, $2->size, 1, NULL);
+					paramInsert(*curr_table, $2->temp_name, $2->type, $2->size, true, NULL);
+					param_size+=$2->size;
+					// insertSymbol(*curr_table, $2->temp_name, $2->type, $2->size, 1, NULL);
 				}
 				funcArgs.push_back($2->type);
 			}
@@ -2632,7 +2659,7 @@ ArgLst : Expr 			{
 							$$->nextlist.clear();
 							int _idx = -1;
 							if($$->type == "char*" && $$->place.second == NULL) _idx = -4;
-							emit(qid("param", NULL), $$->place, qid("", NULL), qid("", NULL), _idx);
+							// emit(qid("param", NULL), $$->place, qid("", NULL), qid("", NULL), _idx);
 						}										
 			 | ArgLst COMMA Expr 		{
 											vector<treeNode> attr;
@@ -2763,6 +2790,7 @@ ArrOp : Name OSQ Expr CSQ 	{
 				//returns the symbol table entry to the temporary variable 
 				//array_dims is a vector<int> in sym_entry*
 				// $$->place= temp_var1;
+
 				if(arr_index[$1->temp_name]==arr_dimensions[$1->temp_name].size()) 
 				{
 					qid temp_var = newtemp($$->type); 
@@ -2934,8 +2962,10 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						qid q = newtemp($$->type);
 						$$->place = q;
 						$$->nextlist.clear();
-
-						emit(qid("CALL", NULL), qid($1->temp_name,NULL), qid(to_string(currArgs.size()), NULL), q, -1);
+						cout<<"name is "<<$1->temp_name<<"\n";
+						sym_entry* sym= Lookup($1->temp_name);
+						cout<<"CHECK "<<sym->paramsize<<"\n";
+						emit(qid("CALL", NULL), qid($1->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
 						currArgs.pop_back();
 
 						if(func_usage_map.find($1->temp_name) != func_usage_map.end()){
@@ -3236,6 +3266,20 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 		$$ = create_AST_node("ArrCreationExpr2", v);
 		$$->dims= $3->dims;
 		cout<<"NEW "<<$3->dims.size()<<" "<<$3->dims[0]<<"\n";
+
+		qid tmp = newtemp($$->type);
+		// cout<<"If found kdhe "<<if_found<<"\n";
+		int temp=1;
+		cout<<"SISZEE "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+		cout<<"DA TYPE IS "<<$2->type<<endl;
+		for(int i=0;i<$3->dims.size();i++)
+		{
+			temp*=$3->dims[i];
+		}
+		emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), tmp, -1);
+		// emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), qid("", NULL), -1);
+		// $$->place = tmp;
+
 		// $$= $3;
 	}						
 						| NEW ClassOrIntfaceType DimExprs Dims {
@@ -3254,6 +3298,7 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 		$$ = create_AST_node("ArrCreationExpr4", v);
 	}				
 						;
+						
 
 DimExprs : DimExprs DimExpr { 
 			vector<treeNode> attr;
@@ -3312,7 +3357,7 @@ Assign  :  LeftHandSide AssignOp {if_found = 0;} Expr 	{
 				if($1->expType == 3 && $4->isInit){
 					UpdateInit($1->temp_name);
 				}
-				cout<<"Type of first arg "<<$1->type<<"\n";
+				// cout<<"Type of first arg "<<$1->type<<"\n";
 				// 3ac 
 				int num = assign_exp($2, $$->type, $1->type, $4->type, $1->place, $4->place);
 				$$->place = $1->place;

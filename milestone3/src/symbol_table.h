@@ -27,16 +27,19 @@ struct sym_entry{
 		bool stack;
 		bool heap;
 	} addr_descriptor;
-
+	int function_offset = 0;
 	int heap_mem = 0;
 	int next_use = -1;
 	int is_derefer = 0;
 	int isArray = 0;
 	int size_of_pointed = 0;
 	int is_global = 0;
-
+	// vector<int> modifiers;
+	int paramsize=0;
+	int funcsize=0;
 	vector<int> array_dims;
 	string storage_class;
+	bool is_static= false;
 };
 
 typedef struct sym_entry sym_entry;
