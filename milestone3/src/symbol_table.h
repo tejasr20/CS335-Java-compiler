@@ -37,6 +37,7 @@ struct sym_entry{
 	// vector<int> modifiers;
 	int paramsize=0;
 	int funcsize=0;
+	int fieldsize= 0;
 	vector<int> array_dims;
 	string storage_class;
 	bool is_static= false;

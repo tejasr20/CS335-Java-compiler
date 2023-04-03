@@ -1,5 +1,20 @@
 3AC code
 test0.main:
 beginfunc
+_t0 = 8
+param _t0
+stackpointer +8
+call allocmem 1
+stackpointer -8
 obj = 
+_t1 = obj member_access a
+param _t1
+_t2 = 12
+param _t2
+stackpointer +12
+call allocmem 1
+stackpointer -12
+_t3 = 2 * 4
+_t4 = arr + _t3
+*(_t4) = 5
 endfunc

@@ -45,6 +45,7 @@ int type_delim = 0;
 int debug_mode = 0;	
 int param_size= 0;
 int func_size= 0;
+int field_size= 0;
 
 string funcName = ""; // global variables. 
 string className= "";
@@ -578,6 +579,7 @@ ClassDec  :  Modifiers CLASS ClassName Super Intfaces C ClassBody 	{
 		$$ = create_AST_node("ClassDecn6", v);
 		classType= "private"; // by default it is private
 		type = "";
+		field_size=0;
 		string cName= className.substr(6, className.size()-6);
 		printSymbolTable(curr_table ,className + ".csv");
 		SymbolTableUpdation(className, 1);	
@@ -593,6 +595,7 @@ ClassDec  :  Modifiers CLASS ClassName Super Intfaces C ClassBody 	{
 		// Symbol table 
 		classType= string($1->type);
 		type = "";
+		field_size=0;
 		string cName= className.substr(6, className.size()-6);
 		printSymbolTable(curr_table ,className + ".csv");
 		SymbolTableUpdation(className, 1);
@@ -635,6 +638,7 @@ ClassDec  :  Modifiers CLASS ClassName Super Intfaces C ClassBody 	{
 		classType= string($1->type);
 		type = "";
 		string cName= className.substr(6, className.size()-6);
+		field_size=0;
 		printSymbolTable(curr_table ,cName + ".csv");
 		SymbolTableUpdation(className, 1);
 	}															
@@ -756,6 +760,18 @@ FieldDecn  :  Modifiers Type VariableDecltrs SCLN 		{
 			$$->nextlist = $3->nextlist;
 		}
 		else $$->is_error = 1;
+		cout<<"Field decn "<<$2->type<<" "<<type<<endl;
+		field_size+= GetSize($2->type);
+		sym_entry* sym= Lookup(className);
+		if (sym ==nullptr){
+			yyerror((className+ " not inserted in symbol table").c_str());
+		}
+		else 
+		{
+			sym->fieldsize= field_size;
+			cout<<"FIelddejnb2 "<<field_size<<" "<<sym->type<<endl;
+		}
+		// field_size=0;
 }																										
 				  |  Type VariableDecltrs SCLN 				{
 		vector<treeNode> v;
@@ -772,6 +788,18 @@ FieldDecn  :  Modifiers Type VariableDecltrs SCLN 		{
 			$$->nextlist = $2->nextlist;
 		}
 		else $$->is_error = 1;
+		cout<<"Field decn1 "<<$2->type<<" "<<type<<endl;
+		field_size+= GetSize($2->type);
+		sym_entry* sym= Lookup(className);
+		if (sym ==nullptr){
+			yyerror((className+ " not inserted in symbol table").c_str());
+		}
+		else 
+		{
+			sym->fieldsize= field_size;
+			cout<<"FIelddejnb2 "<<field_size<<" "<<sym->type<<endl;
+		}
+		// field_size=0;
 		// $$->type= $1->type;
 		// $$->size= $1->size;
 }																											
@@ -2621,6 +2649,22 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		if(type == "") type =  $2->type;
 		else type += " " + string($1);
 		$$->size= 1;
+
+		qid tmp = newtemp($$->type);
+		// cout<<"If found kdhe "<<if_found<<"\n";
+		int temp=1;
+		// cout<<"SISZEEC "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+		cout<<"DA TYPEC IS "<<$2->type<<endl;
+		// for(int i=0;i<$3->dims.size();i++)
+		// {
+		// 	temp*=$3->dims[i];
+		// }
+		sym_entry* sym= Lookup(className);
+		cout<<"Found type is "<<sym->type<<endl;
+		if (sym ==nullptr){
+			yyerror(("Field size not found in class "+ className).c_str());
+		}
+		emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);
 	}								
 								| NEW ClassType OS CS 		{
 		vector<treeNode> attr;
@@ -2631,6 +2675,24 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		if(type == "") type = $2->type;
 		else type += " " + $2->type;
 		$$->size= 1;
+
+		qid tmp = newtemp($$->type);
+		
+		// cout<<"If found kdhe "<<if_found<<"\n";
+		int temp=1;
+		// cout<<"SISZEEC1 "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+		cout<<"DA TYPEC1 IS "<<$2->type<<endl;
+		// for(int i=0;i<$3->dims.size();i++)
+		// {
+		// 	temp*=$3->dims[i];
+		// }
+		cout<<className<<" in Tejas1123"<<endl;
+		sym_entry* sym= Lookup(className);
+		cout<<"Found type is "<<sym->type<<endl;
+		if (sym ==nullptr){
+			yyerror(("Field size not found in class "+ className).c_str());
+		}
+		emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);
 	}												
 								;
  
