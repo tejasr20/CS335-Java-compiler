@@ -144,6 +144,7 @@ void print3AC_code(){
     for(int i = 0;i<code.size();i++){
         string s1 = code[i].op.first;
         if(findLabel.find(i)!=findLabel.end()){
+			// cout<<"YE\n";
             final_3AC<<findLabel[i]<<": ";
         }
         if(s1[0] == '+' || s1[0] == '-' || s1[0] == '*' || s1[0] == '/'){
@@ -201,6 +202,15 @@ void print3AC_code(){
                 final_3AC<<"goto "<<mm[code[i].idx]<<"\n";
             }
         }
+		else if(s1=="NEW")
+		{
+			final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<endl;
+			final_3AC<<"param "<<code[i].res.first<<endl;
+			final_3AC<<"stackpointer +"<<code[i].arg1.first<<endl;
+			final_3AC<<"call allocmem 1"<<endl;
+			final_3AC<<"stackpointer -"<<code[i].arg1.first<<endl;
+			final_3AC<<code[i].arg2.first<<" = popparam "<<endl;
+		}
         else if(code[i].arg1.first != "" && code[i].op.first != "" && code[i].arg2.first !="" && code[i].res.first!=""){
             final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<" "<<code[i].op.first<<" "<<code[i].arg2.first<<"\n";
         }
@@ -214,14 +224,7 @@ void print3AC_code(){
 				// final_3AC<<"stackpointer +"<<code[i].op.second->type<<"\n";
             }
         }
-		else if(s1=="NEW")
-		{
-			final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<endl;
-			final_3AC<<"param "<<code[i].res.first<<endl;
-			final_3AC<<"stackpointer +"<<code[i].arg1.first<<endl;
-			final_3AC<<"call allocmem 1"<<endl;
-			final_3AC<<"stackpointer -"<<code[i].arg1.first<<endl;
-		}
+		
         else if(s1=="RETURN"){
             final_3AC<<"return "<<code[i].arg1.first<<endl;
         }

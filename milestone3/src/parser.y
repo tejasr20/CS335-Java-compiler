@@ -292,7 +292,27 @@ FloatingPoint  :   DOUBLE 	{
 					}																		
 			  	   ;
 
-ClassType  :  ClassOrIntfaceType  	{$$ = $1;}																
+ClassType  :  ClassOrIntfaceType  	{
+						$$ = $1;
+						qid tmp = newtemp($$->type);
+						qid tmp1 = newtemp($$->type);
+						// cout<<"If found kdhe "<<if_found<<"\n";
+						int temp=1;
+						// cout<<"SISZEEC "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+						// cout<<"DA TYPEC IS "<<$2->type<<endl;
+						// for(int i=0;i<$3->dims.size();i++)
+						// {
+						// 	temp*=$3->dims[i];
+						// }
+						sym_entry* sym= Lookup(className);
+						cout<<"Found type is "<<sym->type<<endl;
+						if (sym ==nullptr){
+							yyerror(("Field size not found in class "+ className).c_str());
+						}
+						emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), tmp1, tmp, -1);	
+						// qid tmp1 = newtemp($$->type);
+						// emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);	
+		}																
 		   ;
 
 IntfaceType  :  ClassOrIntfaceType 	{$$ = $1;}														
@@ -2650,21 +2670,7 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		else type += " " + string($1);
 		$$->size= 1;
 
-		qid tmp = newtemp($$->type);
-		// cout<<"If found kdhe "<<if_found<<"\n";
-		int temp=1;
-		// cout<<"SISZEEC "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
-		cout<<"DA TYPEC IS "<<$2->type<<endl;
-		// for(int i=0;i<$3->dims.size();i++)
-		// {
-		// 	temp*=$3->dims[i];
-		// }
-		sym_entry* sym= Lookup(className);
-		cout<<"Found type is "<<sym->type<<endl;
-		if (sym ==nullptr){
-			yyerror(("Field size not found in class "+ className).c_str());
-		}
-		emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);
+		
 	}								
 								| NEW ClassType OS CS 		{
 		vector<treeNode> attr;
@@ -2676,26 +2682,45 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		else type += " " + $2->type;
 		$$->size= 1;
 
-		qid tmp = newtemp($$->type);
+		// qid tmp = newtemp($$->type);
 		
-		// cout<<"If found kdhe "<<if_found<<"\n";
-		int temp=1;
-		// cout<<"SISZEEC1 "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
-		cout<<"DA TYPEC1 IS "<<$2->type<<endl;
-		// for(int i=0;i<$3->dims.size();i++)
-		// {
-		// 	temp*=$3->dims[i];
+		// // cout<<"If found kdhe "<<if_found<<"\n";
+		// int temp=1;
+		// // cout<<"SISZEEC1 "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+		// cout<<"DA TYPEC1 IS "<<$2->type<<endl;
+		// // for(int i=0;i<$3->dims.size();i++)
+		// // {
+		// // 	temp*=$3->dims[i];
+		// // }
+		// cout<<className<<" in Tejas1123"<<endl;
+		// sym_entry* sym= Lookup(className);
+		// cout<<"Found type is "<<sym->type<<endl;
+		// if (sym ==nullptr){
+		// 	yyerror(("Field size not found in class "+ className).c_str());
 		// }
-		cout<<className<<" in Tejas1123"<<endl;
-		sym_entry* sym= Lookup(className);
-		cout<<"Found type is "<<sym->type<<endl;
-		if (sym ==nullptr){
-			yyerror(("Field size not found in class "+ className).c_str());
-		}
-		emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);
+		// emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);
 	}												
 								;
- 
+/* 				
+Alloc: 					{
+			cout<<"in alloc "<<type<<endl;
+			qid tmp = newtemp(type);
+			// cout<<"If found kdhe "<<if_found<<"\n";
+			int temp=1;
+			// cout<<"SISZEEC "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+			// cout<<"DA TYPEC IS "<<$2->type<<endl;
+			// for(int i=0;i<$3->dims.size();i++)
+			// {
+			// 	temp*=$3->dims[i];
+			// }
+			sym_entry* sym= Lookup(className);
+			cout<<"Found type is "<<sym->type<<endl;
+			if (sym ==nullptr){
+				yyerror(("Field size not found in class "+ className).c_str());
+			}
+			emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);
+	}
+  */
 
 ArgLst : Expr 			{
 							$$ = $1;
