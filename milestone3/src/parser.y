@@ -1121,6 +1121,10 @@ MethodDecn  :  MethodHead F MethodBody {
 			printSymbolTable(curr_table ,funName);
 			SymbolTableUpdation(fName,1);
 			emit(qid("FUNC_" + func_3AC + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
+			sym_entry* sym= Lookup(fName);
+			cout<<"IN PARSER "<<fName<<" "<<sym->type<<endl;
+			sym->funcsize= sym->size;
+			
 			backpatch_remaining();
 		}
 	}																											
@@ -1144,9 +1148,9 @@ F: 				{
 							cout<<funcType<<" TYPE "<<funcName<<"\n";
 							if(funcType=="") sym->paramsize= param_size;
 							else sym->paramsize= param_size+ GetSize(funcType);// To accomodate space for return value. 
-							sym->funcsize= sym->size;
+
 							// cout<<"INSIDE F my func size is "<<sym->size<<endl;
-							func_size=0;
+				
 							// cout<<"Function locals and temporaries size is "<<sym->size<<endl;
 							// sym->funcsize= sym->size;
 							// cout<<"sehhhh is "<<param_size<<endl;
