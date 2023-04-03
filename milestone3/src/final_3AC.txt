@@ -20,7 +20,6 @@ b = b1
 endfunc
 test0.main:
 beginfunc
-n = 4
 _t4 = 8
 param _t4
 stackpointer +8
@@ -33,7 +32,10 @@ param _t5
 stackpointer +8
 CALL test0, 2
 stackpointer -8
-_t7 = 4
+_t7 = 0
 _t8 = *(_t5 + _t7)
-_t8 = 4
+param _t8
+stackpointer +0
+CALL print, 2
+stackpointer -0
 endfunc

@@ -3149,45 +3149,52 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 		if($1->temp_name=="System.out.println")
 		{
 			fl=1;
+			cout<<"YEA \n";
 		}
-		if(!($1->is_error || $3->is_error) && $1->expType!=4 && fl==0){
+		if(!($1->is_error || $3->is_error) && $1->expType!=4){
 			if(!temp.empty()){	
 				$$->type = temp;
 				if($1->expType ==3){
 					vector<string> funcArgs = getFuncArgs($1->temp_name);
 					vector<string> tempArgs =currArgs;
-					for(int i=0;i<funcArgs.size();i++){
-						if(funcArgs[i]=="...")break;
-						if(tempArgs.size()==i){
-							yyerror(("Too few Arguments to Function " + $1->temp_name).c_str());
-							break;
-						}
-						string msg = chkType(funcArgs[i],tempArgs[i]);
+					if(fl==0)
+					{
+						for(int i=0;i<funcArgs.size();i++)
+						{
+							if(funcArgs[i]=="...")break;
+							if(tempArgs.size()==i){
+								yyerror(("Too few Arguments to Function " + $1->temp_name).c_str());
+								break;
+							}
+							string msg = chkType(funcArgs[i],tempArgs[i]);
 
-						if(msg =="warning"){
-							warning(("Incompatible conversion of " +  tempArgs[i] + " to parameter of type " + funcArgs[i]).c_str());
-						}
-						else if(msg.empty()){
-							yyerror(("Incompatible Argument to the function " + $1->temp_name).c_str());
-							$$->is_error = 1;
-							break;
-						}
-						if(i==funcArgs.size()-1 && i<tempArgs.size()-1){
-							yyerror(("Too many Arguments to Function " + $1->temp_name).c_str());
-							$$->is_error = 1;
-							break;
-						}
+							if(msg =="warning"){
+								warning(("Incompatible conversion of " +  tempArgs[i] + " to parameter of type " + funcArgs[i]).c_str());
+							}
+							else if(msg.empty()){
+								yyerror(("Incompatible Argument to the function " + $1->temp_name).c_str());
+								$$->is_error = 1;
+								break;
+							}
+							if(i==funcArgs.size()-1 && i<tempArgs.size()-1){
+								yyerror(("Too many Arguments to Function " + $1->temp_name).c_str());
+								$$->is_error = 1;
+								break;
+							}
 
-					}	
-
+						}	
+					}
+					
 					//--3AC
 					if(!$$->is_error){
 						qid q = newtemp($$->type);
 						$$->place = q;
+						
 						$$->nextlist.clear();
 						cout<<"name is "<<$1->temp_name<<"\n";
 						sym_entry* sym= Lookup($1->temp_name);
 						cout<<"CHECK "<<sym->paramsize<<"\n";
+						if($1->temp_name== "System.out.println") $1->temp_name= "print";
 						emit(qid("CALL", NULL), qid($1->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
 						currArgs.pop_back();
 
