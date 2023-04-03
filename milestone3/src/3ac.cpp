@@ -5,6 +5,7 @@ using namespace std;
 
 vector<quad> code;
 long long cntr = 0;
+int f_flag=0;// used for printing stackpointer updation in constructor, because they dont return 
 
 void emit(qid op, qid arg1, qid arg2, qid res, int idx){
     quad temp;
@@ -143,7 +144,7 @@ void print3AC_code(){
     }
     for(int i = 0;i<code.size();i++){
         string s1 = code[i].op.first;
-        if(findLabel.find(i)!=findLabel.end()){
+        if(findLabel.find(i)!=findLabel.end() && s1!="RETURN"){
 			// cout<<"YE\n";
             final_3AC<<findLabel[i]<<": ";
         }
@@ -219,16 +220,28 @@ void print3AC_code(){
         }
         else if(s1.substr(0,5)=="FUNC_"){
             if (s1.substr(s1.size()-5,3)=="end"){
-                final_3AC<<"endfunc\n";
+				
+                 if(f_flag==0) final_3AC<<"stackpointer -20\n";
+				final_3AC<<"endfunc\n";
+				f_flag=0;
             }
             else{
               
-                final_3AC<<s1.substr(5,s1.size()-13)<<":\nbeginfunc\n";
+                
+				final_3AC<<s1.substr(5,s1.size()-13)<<":\nbeginfunc\n";
+				 final_3AC<<"stackpointer +20\n";
 				// final_3AC<<"stackpointer +"<<code[i].op.second->type<<"\n";
             }
         }
 		
         else if(s1=="RETURN"){
+			
+			 final_3AC<<"stackpointer -20\n";
+			  if(findLabel.find(i)!=findLabel.end()){
+			// cout<<"YE\n";
+            final_3AC<<findLabel[i]<<": ";
+       	 }
+			 f_flag=1;
             final_3AC<<"return "<<code[i].arg1.first<<endl;
         }
         else if(s1.find("to")!=-1){
