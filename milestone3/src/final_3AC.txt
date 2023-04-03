@@ -14,5 +14,9 @@ stackpointer -8
 _t1 = popparam 
 param 3
 param 5
-obj = 
+param _t1
+stackpointer +8
+CALL test0, 2
+stackpointer -8
+obj = _t2
 endfunc

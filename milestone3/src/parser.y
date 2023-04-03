@@ -310,6 +310,8 @@ ClassType  :  ClassOrIntfaceType  	{
 							yyerror(("Field size not found in class "+ className).c_str());
 						}
 						emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), tmp1, tmp, -1);	
+						$$->place= tmp1;
+						$$->expType= 3;
 						// qid tmp1 = newtemp($$->type);
 						// emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);	
 		}																
@@ -2665,12 +2667,89 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		add_attribute(attr, $2, "", 1);
 		add_attribute(attr, $4, "", 1);
 		$$ = create_AST_node("ClassInstCreationExpr1", attr);
-
+// cout<<"NISH3\n";
 		if(type == "") type =  $2->type;
 		else type += " " + string($1);
 		$$->size= 1;
+		string temp= $2->type;
+			// $$->isInit = $3->isInit; // { currArgs.push_back(vector<string>()); }  used in theirs 
+			// cout<<"p2 "<<$2->type<<endl;
+		// string temp = postfixExpr("FUNC_"+$2->type,3);
+			// cout<<"p1 "<<temp<<endl;
+		// if(temp.empty()){
+		// 	temp = getFuncType($2->temp_name);
+		// }
+		int fl=0;
+		if(!($2->is_error || $4->is_error) && $2->expType!=4 && fl==0){
+			cout<<"ABIHSIHEIH "<<temp<<endl;
+			if(!temp.empty()){	
+				// cout<<"NISH2\n";
+				$$->type = temp;
+				if($2->expType ==3){
+					cout<<"NISH2\n";
+					vector<string> funcArgs = getFuncArgs($2->temp_name);
+					vector<string> tempArgs =currArgs;
+					for(int i=0;i<funcArgs.size();i++){
+						if(funcArgs[i]=="...")break;
+						if(tempArgs.size()==i){
+							yyerror(("Too few Arguments to constructor " + $2->temp_name).c_str());
+							break;
+						}
+						string msg = chkType(funcArgs[i],tempArgs[i]);
 
-		
+						if(msg =="warning"){
+							warning(("Incompatible conversion of " +  tempArgs[i] + " to parameter of type " + funcArgs[i]).c_str());
+						}
+						else if(msg.empty()){
+							yyerror(("Incompatible Argument to the constructor " + $2->temp_name).c_str());
+							$$->is_error = 1;
+							break;
+						}
+						if(i==funcArgs.size()-1 && i<tempArgs.size()-1){
+							yyerror(("Too many Arguments to constructor " + $2->temp_name).c_str());
+							$$->is_error = 1;
+							break;
+						}
+
+					}	
+					cout<<"Here NISH\n";
+					//--3AC
+					if(!$$->is_error){
+						int _idx = -1;
+						// here, emitting a -1: index is set to code.size() here. 
+						if($$->type == "char*" && $$->place.second == NULL) _idx = -4;
+						emit(qid("param", NULL), $2->place, qid("", NULL), qid("", NULL), _idx);
+						qid q = newtemp($$->type);
+						$$->place = q;
+						$$->nextlist.clear();
+						cout<<"name is "<<$2->temp_name<<"\n";
+						sym_entry* sym= Lookup($2->temp_name);
+						cout<<"CHECK "<<sym->paramsize<<"\n";
+						emit(qid("CALL", NULL), qid($2->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
+						currArgs.pop_back();
+
+						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
+							func_usage_map[$2->temp_name] = 1;
+						}
+					}
+
+				}
+			}
+			else{
+				// cout<<"NISH4\n";
+				yyerror("Invalid function call");
+				$$->is_error=1;
+			}
+		}
+		else{
+			// cout<<"NISH5\n";
+			if($2->expType==4){
+				yyerror("constant expression cannot be used as lvalue");
+			}
+			$$->is_error=1;
+			cout<<"NISH1\n";
+		}
+			
 	}								
 								| NEW ClassType OS CS 		{
 		vector<treeNode> attr;
@@ -2682,23 +2761,51 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		else type += " " + $2->type;
 		$$->size= 1;
 
-		// qid tmp = newtemp($$->type);
-		
-		// // cout<<"If found kdhe "<<if_found<<"\n";
-		// int temp=1;
-		// // cout<<"SISZEEC1 "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
-		// cout<<"DA TYPEC1 IS "<<$2->type<<endl;
-		// // for(int i=0;i<$3->dims.size();i++)
-		// // {
-		// // 	temp*=$3->dims[i];
-		// // }
-		// cout<<className<<" in Tejas1123"<<endl;
-		// sym_entry* sym= Lookup(className);
-		// cout<<"Found type is "<<sym->type<<endl;
-		// if (sym ==nullptr){
-		// 	yyerror(("Field size not found in class "+ className).c_str());
-		// }
-		// emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);
+		$$->isInit = 1;
+		string temp = postfixExpr($2->type,2);
+		string blank_s = "";
+		currArgs.push_back(blank_s ); 
+
+		if(temp.empty()){
+			temp = getFuncType($2->temp_name);
+		}
+
+		if(!($2->is_error) && $2->expType!=4){
+			if(!temp.empty()){	
+				$$->type = temp;
+				if($2->expType == 3){
+					vector<string> funcArg = getFuncArgs($2->temp_name);
+					if(!funcArg.empty()){
+						yyerror(("Too few Arguments to constructor " + $2->temp_name).c_str());
+					}
+					else{
+
+					//--3AC
+						qid q = newtemp(temp);
+						$$->nextlist.clear();
+
+						emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
+						currArgs.pop_back();
+						//if(currArgs.size()>1)currArgs.push_back($$->type) ;
+						$$->place = q;
+
+						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
+							func_usage_map[$2->temp_name] = 1;
+						}
+					}
+				}
+			}
+			else{
+				yyerror(("Constructor " + $2->temp_name + " not declared in this scope").c_str());
+				$$->is_error=1;
+			}
+		}
+		else{
+			if($2->expType==4){
+				yyerror("constant expression cannot be used as lvalue");
+			}
+			$$->is_error=1;
+		}
 	}												
 								;
 /* 				
