@@ -64,6 +64,7 @@ vector<sym_entry*> args;
 vector<string> idList;
 vector<string> currArgs;
 
+vector<string> classNamelist;
 vector<qid> initializer_list_values;
 vector<int> array_dims;
 map<string, vector<int> > arr_dimensions;
@@ -72,6 +73,7 @@ map<string, vector<int> > gotolablelist;
 map<string, int> gotolabel;
 map<string, int> func_usage_map;
 map<string, vector<qid>> global_array_init_map;
+// vector<string, 
 
 extern int yyrestart(FILE*);
 int warning(const char* s) ;
@@ -182,7 +184,13 @@ Identifier  :  IDENTIFIER 	{
 											$$->size = GetSize(temp); // returns size of type of the identifier s. 
 											$$->temp_name = string($1); 
 											//--3AC
-											$$->place = qid(string($1), Lookup(s));
+											sym_entry* sym= Lookup(s);
+											cout<<"Badmaash "<<sym->place<<endl;
+											if(find(classNamelist.begin(), classNamelist.end(), sym->type)!=classNamelist.end())
+											{
+												 $$->place= qid(sym->place, NULL);
+											}
+											else $$->place = qid(string($1), Lookup(s));
 											$$->nextlist.clear();
 										}
 									
@@ -349,12 +357,13 @@ Name  :  QualName		{$$ = $1;}
 
 SimpleName  :  Identifier {
 								$$ = $1;
-								special_type= $1->temp_name;
+								// special_type= $1->temp_name;
 								// special_type was an attempt to recognise class names. 
 								// Not used. 
 						};
 
 QualName  :  Name FST IDENTIFIER {
+	// Name FST IDENTIFIER {
 		vector<treeNode> attr;
 		add_attribute(attr, $1, "", 1);
 		add_attribute(attr, create_AST_leaf($3, "IDENTIFIER"), "", 1);
@@ -378,11 +387,13 @@ QualName  :  Name FST IDENTIFIER {
 			else{
 				$$->type = r->type;
 				$$->temp_name = $1->temp_name + "." + temp;
-				
+				qid temp_var1 = newtemp($$->type);
+				emit(qid("=", r), qid(to_string(r->offset),NULL), qid("",NULL), temp_var1, -1);
 				qid temp_var = newtemp($$->type);
 				// adds a temporary variable(for 3AC) to symbol table. 
+				// cout<<"In qual name "<<$1->place.first<<endl;
 				sym_entry* attr_sym = retTypeAttrEntry(r);
-				emit(qid("member_access", NULL), $1->place, qid(string($3), attr_sym), temp_var, -1);
+				emit(qid("qualname", r), $1->place, temp_var1, temp_var, -1);
 				temp_var.second->array_dims = attr_sym->array_dims;
 				$$->place = temp_var;
 			}
@@ -685,6 +696,7 @@ C: {
 ClassName: IDENTIFIER {
 							$$=$1;
 							className= "CLASS_"+string($1);
+							classNamelist.push_back(string($1));
 							// add 3AC support. 
 }
 
@@ -911,7 +923,14 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 						// cout<<"HI THEN "<<$4->type<<"\n";
 						$1->type= $4->type;
 				}
+				cout<<"Inserting symbol "<<$4->place.first<<endl;
 				insertSymbol(*curr_table, $1->temp_name, $1->type, $1->size, 1, NULL);
+				// $$->place= $4->place;
+				sym_entry* sym= Lookup($1->temp_name);
+				if(find(classNamelist.begin(), classNamelist.end(), $1->type)!=classNamelist.end())
+				{
+					sym->place= $4->place.first;
+				}
 			}
 			
 			if(!checkIfVoid($1->type)){			
@@ -978,10 +997,15 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 					}
 				}
 				else{
-					assign_exp("=", $1->type,$1->type, $4->type, $1->place, $4->place);
+					// cout<<"IN heredbwid"<<$1->type<<"\n";
+					if(find(classNamelist.begin(), classNamelist.end(), $1->type)==classNamelist.end())
+					{
+						assign_exp("=", $1->type,$1->type, $4->type, $1->place, $4->place);
+					}
 				}
 				
 				$$->place = $1->place;
+				cout<<"Plce is "<<$1->place.first<<endl;
 				$$->nextlist = $4->nextlist;
 				backpatch($1->nextlist, $3);
 			}
@@ -1005,12 +1029,15 @@ VariableDecltrId  :  IDENTIFIER		{
 								if(type=="")
 								{
 									$$->type= className.substr(6, className.size()-6);
+									// sym_entry* sym= Lookup(string($1));
+									// $$->place= 
 								}
 								$$->temp_name = string($1);
 								$$->size = GetSize(type);
 
 								//3AC
-								$$->place = qid($$->temp_name, NULL);
+								// if(type=="") $$->place= sym->sym_place;
+								 $$->place = qid($$->temp_name, NULL);
 			}															
 					  |  VariableDecltrId OSQ CSQ {
 		vector<treeNode> v;
@@ -2720,7 +2747,8 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 						if($$->type == "char*" && $$->place.second == NULL) _idx = -4;
 						emit(qid("param", NULL), $2->place, qid("", NULL), qid("", NULL), _idx);
 						qid q = newtemp($$->type);
-						$$->place = q;
+						// $$->place = q;
+						$$->place= $2->place;
 						$$->nextlist.clear();
 						cout<<"name is "<<$2->temp_name<<"\n";
 						sym_entry* sym= Lookup($2->temp_name);
@@ -2787,7 +2815,8 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 						emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
 						currArgs.pop_back();
 						//if(currArgs.size()>1)currArgs.push_back($$->type) ;
-						$$->place = q;
+						// $$->place = q;
+						$$->place= $2->place;
 
 						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
 							func_usage_map[$2->temp_name] = 1;

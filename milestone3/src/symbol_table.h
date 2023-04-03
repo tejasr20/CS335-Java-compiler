@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include<map>
 #include<stack>
+// #include "3AC.h"
 using namespace std;
 typedef long long ll;
 typedef unsigned long long ull;
@@ -40,6 +41,7 @@ struct sym_entry{
 	int fieldsize= 0;
 	vector<int> array_dims;
 	string storage_class;
+	string place;
 	bool is_static= false;
 };
 

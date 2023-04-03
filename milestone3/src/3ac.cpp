@@ -173,6 +173,9 @@ void print3AC_code(){
                 final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<"\n";
             }
         }
+		 else if(code[i].op.first == "qualname"){
+            final_3AC<<code[i].res.first<<" = *("<<code[i].arg1.first<<" + "<<code[i].arg2.first<<")\n";
+        }
         else if(code[i].op.first == "param"){
             final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
         }
