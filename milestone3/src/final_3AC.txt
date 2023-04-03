@@ -20,22 +20,29 @@ b = b1
 endfunc
 test0.main:
 beginfunc
-_t4 = 8
-param _t4
+n = 4
+param 5
+param n
+stackpointer +12
+CALL max, 2
+stackpointer -12
+n = _t4
+_t5 = 8
+param _t5
 stackpointer +8
 call allocmem 1
 stackpointer -8
-_t5 = popparam 
-param 3
+_t6 = popparam 
 param 5
-param _t5
+param 7
+param _t6
 stackpointer +8
 CALL test0, 2
 stackpointer -8
-_t7 = 0
-_t8 = *(_t5 + _t7)
-param _t8
+_t8 = 0
+_t9 = *(_t6 + _t8)
+param _t9
 stackpointer +0
-CALL print, 2
+CALL print, 3
 stackpointer -0
 endfunc

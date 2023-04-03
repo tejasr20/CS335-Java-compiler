@@ -185,7 +185,7 @@ Identifier  :  IDENTIFIER 	{
 											$$->temp_name = string($1); 
 											//--3AC
 											sym_entry* sym= Lookup(s);
-											cout<<"Badmaash "<<sym->place<<endl;
+											// cout<<"Badmaash "<<sym->place<<endl;
 											if(find(classNamelist.begin(), classNamelist.end(), sym->type)!=classNamelist.end())
 											{
 												 $$->place= qid(sym->place, NULL);
@@ -822,7 +822,7 @@ FieldDecn  :  Modifiers Type VariableDecltrs SCLN 		{
 			$$->nextlist = $2->nextlist;
 		}
 		else $$->is_error = 1;
-		cout<<"Field decn1 "<<$2->type<<" "<<type<<endl;
+		//cout<<"Field decn1 "<<$2->type<<" "<<type<<endl;
 		field_size+= GetSize($2->type);
 		sym_entry* sym= Lookup(className);
 		if (sym ==nullptr){
@@ -831,7 +831,7 @@ FieldDecn  :  Modifiers Type VariableDecltrs SCLN 		{
 		else 
 		{
 			sym->fieldsize= field_size;
-			cout<<"FIelddejnb2 "<<field_size<<" "<<sym->type<<endl;
+			//cout<<"FIelddejnb2 "<<field_size<<" "<<sym->type<<endl;
 		}
 		// field_size=0;
 		// $$->type= $1->type;
@@ -923,7 +923,7 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 						// cout<<"HI THEN "<<$4->type<<"\n";
 						$1->type= $4->type;
 				}
-				cout<<"Inserting symbol "<<$4->place.first<<endl;
+				// cout<<"Inserting symbol "<<$4->place.first<<endl;
 				insertSymbol(*curr_table, $1->temp_name, $1->type, $1->size, 1, NULL);
 				// $$->place= $4->place;
 				sym_entry* sym= Lookup($1->temp_name);
@@ -945,7 +945,7 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 					// isArray=0;
 					if($4->dims.size()!=0)
 					{
-						cout<<"New Dim size is "<<$4->dims.size()<<" Dim size is "<<arr_dimensions[$1->temp_name].size()<<"\n";
+						// cout<<"New Dim size is "<<$4->dims.size()<<" Dim size is "<<arr_dimensions[$1->temp_name].size()<<"\n";
 						if($4->dims.size()<arr_dimensions[$1->temp_name].size())
 						{
 							yyerror(("Invalid creation of array " + $1->temp_name + ": lesser parameters passed in NEW").c_str()); 
@@ -1005,7 +1005,7 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 				}
 				
 				$$->place = $1->place;
-				cout<<"Plce is "<<$1->place.first<<endl;
+				// cout<<"Plce is "<<$1->place.first<<endl;
 				$$->nextlist = $4->nextlist;
 				backpatch($1->nextlist, $3);
 			}
@@ -1067,7 +1067,7 @@ VariableDecltrId  :  IDENTIFIER		{
 					arr_index[$1->temp_name]= 0;
 				}
 				else arr_dimensions[$1->temp_name].push_back(0);
-				cout<<"dims of array "<<$$->temp_name<<" is "<<arr_dimensions[$1->temp_name].size()<<"\n";
+				// cout<<"dims of array "<<$$->temp_name<<" is "<<arr_dimensions[$1->temp_name].size()<<"\n";
 				isArray = 1;
 			}
 			else {
@@ -1139,9 +1139,14 @@ F: 				{
 							// cout<<""
 							CreateSymbolTable(funcName, funcType,1, 1);
 							sym_entry* sym= Lookup(funcName);
-							cout<<"Here "<<sym->type<<endl;
-							cout<<"Param size is "<<param_size<<endl;
-							sym->paramsize= param_size;
+							// cout<<"Here "<<sym->type<<endl;
+							// cout<<"Param size is "<<param_size<<endl;
+							cout<<funcType<<" TYPE "<<funcName<<"\n";
+							if(funcType=="") sym->paramsize= param_size;
+							else sym->paramsize= param_size+ GetSize(funcType);// To accomodate space for return value. 
+							sym->funcsize= sym->size;
+							// cout<<"INSIDE F my func size is "<<sym->size<<endl;
+							func_size=0;
 							// cout<<"Function locals and temporaries size is "<<sym->size<<endl;
 							// sym->funcsize= sym->size;
 							// cout<<"sehhhh is "<<param_size<<endl;
@@ -1263,9 +1268,9 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 					//3AC
 					$$->place = qid($$->temp_name, NULL);
 					backpatch($4->nextlist,$6);
-					cout<<"IN INII "<<funcName<<endl;
+					// cout<<"IN INII "<<funcName<<endl;
 					sym_entry* sym= Lookup(funcName);
-					if(sym==nullptr) cout<<"THIS IS NULL BRO1\n";
+					// if(sym==nullptr) cout<<"THIS IS NULL BRO1\n";
 					emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",sym),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
 					// cout<<"CRASH\n";
 				}
@@ -1280,7 +1285,7 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 						$$->place = qid($$->temp_name, NULL);
 						backpatch($4->nextlist,$6);
 						sym_entry* sym= Lookup($1->temp_name);
-						if(sym==nullptr) cout<<"THIS IS NULL BRO\n";
+						// if(sym==nullptr) cout<<"THIS IS NULL BRO\n";
 						emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",sym),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
 					}
 					else {
@@ -2708,14 +2713,18 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		// }
 		int fl=0;
 		if(!($2->is_error || $4->is_error) && $2->expType!=4 && fl==0){
-			cout<<"ABIHSIHEIH "<<temp<<endl;
+			// cout<<"ABIHSIHEIH "<<temp<<endl;
 			if(!temp.empty()){	
 				// cout<<"NISH2\n";
 				$$->type = temp;
 				if($2->expType ==3){
-					cout<<"NISH2\n";
+					// cout<<"NISH2\n";
 					vector<string> funcArgs = getFuncArgs($2->temp_name);
 					vector<string> tempArgs =currArgs;
+					for(int i=0;i<tempArgs.size();i++){
+						// cout<<tempArgs[i]<<"F\n";
+
+					}	
 					for(int i=0;i<funcArgs.size();i++){
 						if(funcArgs[i]=="...")break;
 						if(tempArgs.size()==i){
@@ -2739,7 +2748,7 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 						}
 
 					}	
-					cout<<"Here NISH\n";
+					// cout<<"Here NISH\n";
 					//--3AC
 					if(!$$->is_error){
 						int _idx = -1;
@@ -2750,12 +2759,12 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 						// $$->place = q;
 						$$->place= $2->place;
 						$$->nextlist.clear();
-						cout<<"name is "<<$2->temp_name<<"\n";
+						// cout<<"name is "<<$2->temp_name<<"\n";
 						sym_entry* sym= Lookup($2->temp_name);
-						cout<<"CHECK "<<sym->paramsize<<"\n";
+						// cout<<"CHECK "<<sym->paramsize<<"\n";
 						emit(qid("CALL", NULL), qid($2->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
-						currArgs.pop_back();
-
+						// currArgs.pop_back();
+						
 						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
 							func_usage_map[$2->temp_name] = 1;
 						}
@@ -2775,7 +2784,7 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 				yyerror("constant expression cannot be used as lvalue");
 			}
 			$$->is_error=1;
-			cout<<"NISH1\n";
+			// cout<<"NISH1\n";
 		}
 			
 	}								
@@ -2865,7 +2874,11 @@ ArgLst : Expr 			{
 								$$->isInit = $1->isInit;
 								string temp_s;
 								temp_s = $1->type;
+								// cout<<"The size of currArgs is "<<currArgs.size()<<endl;
+								
+								// cout<<$1->int_val<<"\n";
 								currArgs.push_back((temp_s));
+								// cout<<currArgs[0]<<"C\n";
 								// currArgs.push_back($1->type);
 								$$->type = "void";
 
@@ -2895,6 +2908,7 @@ ArgLst : Expr 			{
 
 												if($1->isInit && $3->isInit) $$->isInit=1;
 												currArgs.push_back($3->type);
+												cout<<$3->int_val<<"\n";
 												$$->type = "void";
 
 												//--3AC
@@ -3149,7 +3163,7 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 		if($1->temp_name=="System.out.println")
 		{
 			fl=1;
-			cout<<"YEA \n";
+			// cout<<"YEA \n";
 		}
 		if(!($1->is_error || $3->is_error) && $1->expType!=4){
 			if(!temp.empty()){	
@@ -3191,12 +3205,13 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						$$->place = q;
 						
 						$$->nextlist.clear();
-						cout<<"name is "<<$1->temp_name<<"\n";
+						// cout<<"name is "<<$1->temp_name<<"\n";
 						sym_entry* sym= Lookup($1->temp_name);
-						cout<<"CHECK "<<sym->paramsize<<"\n";
+						//cout<<"CHECK "<<sym->paramsize<<"\n";
 						if($1->temp_name== "System.out.println") $1->temp_name= "print";
 						emit(qid("CALL", NULL), qid($1->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
-						currArgs.pop_back();
+						// currArgs.pop_back();
+						currArgs.clear();
 
 						if(func_usage_map.find($1->temp_name) != func_usage_map.end()){
 							func_usage_map[$1->temp_name] = 1;
@@ -3245,7 +3260,8 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						$$->nextlist.clear();
 
 						emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
-						currArgs.pop_back();
+						// currArgs.pop_back();
+						currArgs.clear();
 						//if(currArgs.size()>1)currArgs.push_back($$->type) ;
 						$$->place = q;
 
@@ -3351,8 +3367,9 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						$$->nextlist.clear();
 
 						emit(qid("CALL", NULL), qid($1->temp_name,NULL), qid(to_string(currArgs.size()), NULL), q, -1);
-						currArgs.pop_back();
+						// currArgs.pop_back();
 
+						currArgs.clear();
 						if(func_usage_map.find($1->temp_name) != func_usage_map.end()){
 							func_usage_map[$1->temp_name] = 1;
 						}
@@ -3436,7 +3453,8 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						$$->nextlist.clear();
 
 						emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
-						currArgs.pop_back();
+						// currArgs.pop_back();
+						currArgs.clear();
 						//if(currArgs.size()>1)currArgs.push_back($$->type) ;
 						$$->place = q;
 
@@ -3495,13 +3513,13 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 		add_attribute(v, $3, "", 1);
 		$$ = create_AST_node("ArrCreationExpr2", v);
 		$$->dims= $3->dims;
-		cout<<"NEW "<<$3->dims.size()<<" "<<$3->dims[0]<<"\n";
+		//cout<<"NEW "<<$3->dims.size()<<" "<<$3->dims[0]<<"\n";
 
 		qid tmp = newtemp($$->type);
 		// cout<<"If found kdhe "<<if_found<<"\n";
 		int temp=1;
-		cout<<"SISZEE "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
-		cout<<"DA TYPE IS "<<$2->type<<endl;
+		//cout<<"SISZEE "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+		//cout<<"DA TYPE IS "<<$2->type<<endl;
 		for(int i=0;i<$3->dims.size();i++)
 		{
 			temp*=$3->dims[i];
@@ -3570,7 +3588,7 @@ Assign  :  LeftHandSide AssignOp {if_found = 0;} Expr 	{
 							add_attribute(attr, $1, "", 1);
 							add_attribute(attr, $4, "", 1);
 							$$ = create_AST_node($2,attr);
-							// cout<<"Assign Expression "<<$1->temp_name<<" "<<$1->type<<" "<<string($2)<<" "<<$4->temp_name<<" "<<$4->type<<"\n";
+							// //cout<<"Assign Expression "<<$1->temp_name<<" "<<$1->type<<" "<<string($2)<<" "<<$4->temp_name<<" "<<$4->type<<"\n";
 
 							//Semantics
 		string temp = asgnExpr($1->type,$4->type,string($2));
