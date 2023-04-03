@@ -229,7 +229,7 @@ void print3AC_code(){
               
                 
 				final_3AC<<s1.substr(5,s1.size()-13)<<":\nbeginfunc\n";
-				 final_3AC<<"stackpointer +20\n";
+				 final_3AC<<"stackpointer "<<code[i].op.second->funcsize<<"\n";
 				// final_3AC<<"stackpointer +"<<code[i].op.second->type<<"\n";
             }
         }
