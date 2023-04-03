@@ -1120,11 +1120,12 @@ MethodDecn  :  MethodHead F MethodBody {
 			string func_3AC= cName+ "."+ fName;
 			printSymbolTable(curr_table ,funName);
 			SymbolTableUpdation(fName,1);
-			emit(qid("FUNC_" + func_3AC + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
 			sym_entry* sym= Lookup(fName);
-			cout<<"IN PARSER "<<fName<<" "<<sym->type<<endl;
+			cout<<"hijk "<<sym->size<<endl;
 			sym->funcsize= sym->size;
-			
+			if(sym==nullptr) cout<<"THIS IS NULL BRODIJ "<<funcName<<"\n";
+			emit(qid("FUNC_" + func_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
+			cout<<"IN PARSER "<<fName<<" "<<sym->type<<" "<<sym->size<<endl;
 			backpatch_remaining();
 		}
 	}																											
@@ -1143,12 +1144,13 @@ F: 				{
 							// cout<<""
 							CreateSymbolTable(funcName, funcType,1, 1);
 							sym_entry* sym= Lookup(funcName);
+							if(sym==nullptr) cout<<"THIS IS NULL BRO3 "<<funcName<<"\n";
+							emit(qid("FUNC_size",sym),qid("",NULL),qid("",NULL),qid("",NULL),-1);
 							// cout<<"Here "<<sym->type<<endl;
 							// cout<<"Param size is "<<param_size<<endl;
 							cout<<funcType<<" TYPE "<<funcName<<"\n";
 							if(funcType=="") sym->paramsize= param_size;
 							else sym->paramsize= param_size+ GetSize(funcType);// To accomodate space for return value. 
-
 							// cout<<"INSIDE F my func size is "<<sym->size<<endl;
 				
 							// cout<<"Function locals and temporaries size is "<<sym->size<<endl;
@@ -1273,9 +1275,9 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 					$$->place = qid($$->temp_name, NULL);
 					backpatch($4->nextlist,$6);
 					// cout<<"IN INII "<<funcName<<endl;
-					sym_entry* sym= Lookup(funcName);
-					// if(sym==nullptr) cout<<"THIS IS NULL BRO1\n";
-					emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",sym),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
+					// sym_entry* sym= Lookup(funcName);
+					// if(sym==nullptr) cout<<"THIS IS NULL BRO1 "<<funcName<<"\n";
+					emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
 					// cout<<"CRASH\n";
 				}
 				else{
@@ -1289,7 +1291,7 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 						$$->place = qid($$->temp_name, NULL);
 						backpatch($4->nextlist,$6);
 						sym_entry* sym= Lookup($1->temp_name);
-						// if(sym==nullptr) cout<<"THIS IS NULL BRO\n";
+						if(sym==nullptr) cout<<"THIS IS NULL BRO\n";
 						emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",sym),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
 					}
 					else {
@@ -1524,7 +1526,12 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			printSymbolTable(curr_table ,constName);
 			constructor_num++;
 			SymbolTableUpdation(fName,1);
-			emit(qid("FUNC_" +  constr_3AC + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
+			sym_entry* sym= Lookup(fName);
+			cout<<"hijk1 "<<sym->size<<endl;
+			sym->funcsize= sym->size;
+			if(sym==nullptr) cout<<"THIS IS NULL BRODIJ "<<funcName<<"\n";
+			// emit(qid("FUNC_" + func_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
+			emit(qid("FUNC_" +  constr_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
 			backpatch_remaining();
 		}
 	}												
@@ -1567,8 +1574,12 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			printSymbolTable(curr_table ,constName);
 			constructor_num++;
 			// printSymbolTable(curr_table ,fName + ".csv");
+			sym_entry* sym= Lookup(fName);
+			cout<<"hijk1 "<<sym->size<<endl;
+			sym->funcsize= sym->size;
+			if(sym==nullptr) cout<<"THIS IS NULL BRODIJ "<<funcName<<"\n";
 			SymbolTableUpdation(fName,1);
-			emit(qid("FUNC_" +  constr_3AC  + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
+			emit(qid("FUNC_" +  constr_3AC  + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
 			backpatch_remaining();
 		}
 	}											
@@ -1611,7 +1622,11 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			constructor_num++;
 			// printSymbolTable(curr_table ,fName + ".csv");
 			SymbolTableUpdation(fName,1);
-			emit(qid("FUNC_" +  constr_3AC + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
+			sym_entry* sym= Lookup(fName);
+			cout<<"hijk1 "<<sym->size<<endl;
+			sym->funcsize= sym->size;
+			if(sym==nullptr) cout<<"THIS IS NULL BRODIJ "<<funcName<<"\n";
+			emit(qid("FUNC_" +  constr_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
 			backpatch_remaining();
 		}
 	}				
