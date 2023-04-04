@@ -14,7 +14,7 @@ string primExpr(string id) {
 		string s;
 		if(id.substr(0,5)=="CLASS")
 		{
-			cout<<id.substr(6,id.length()-6)<<" Y\n";
+			// cout<<id.substr(6,id.length()-6)<<" Y\n";
 			s= id.substr(6,id.length()-6);
 		}
         else s = n->type;

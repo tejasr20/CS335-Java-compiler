@@ -18,7 +18,7 @@ typedef struct{
 	ll size;
 	string type;
 	int isInit;
-	ll int_val;
+	ll int_val= -1;
 	ld real_val;
 	string str_val;
 	vector<int> dims;

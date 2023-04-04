@@ -13,37 +13,19 @@ c = _t4
 stackpointer -20
 return 1
 endfunc
-test0.ctor1:
+test0.fun:
 beginfunc
-stackpointer +64
-_t5 = popparam
-_t6 = popparam
-_t7 = popparam
-_t8 = popparam
-_t9 = popparam
-_t10 = popparam
-_t11 = popparam
-_t12 = popparam
-a = _t11
-b = _t12
-stackpointer -64
+stackpointer +0
+stackpointer -20
+return 1
 endfunc
 test0.main:
 beginfunc
 stackpointer +40
-_t13 = popparam
-_t14 = 8
-param _t14
+_t5 = popparam
+_t6 = 8
+param _t6
 stackpointer +8
 call allocmem 1
 stackpointer -8
-_t15 = popparam 
-param _t15
-param 5
-param 3
-stackpointer +8
-CALL test0
-_t16 = popparam
-stackpointer -8
-stackpointer -40
-endfunc
+_t7 = popparam 

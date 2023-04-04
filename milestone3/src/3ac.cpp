@@ -112,10 +112,14 @@ void pop_function_arguments(string id)
 	for(auto it: *temp)
 	{
 		// cout<<"emitting "<<it.second->offset<<endl;
-		cout<<" TADA "<<id<<endl;
-		qid tmp= newtemp(it.second->type);
-		emit(qid("=", it.second), qid("popparam",NULL), qid(it.first, NULL), tmp, -1);
-		it.second->place= tmp.first;
+		if(it.second->offset<0)
+
+		{
+			qid tmp= newtemp(it.second->type);
+			// cout<<" TADA "<<id<<endl;
+			emit(qid("=", it.second), qid("popparam",NULL), qid(it.first, NULL), tmp, -1);
+			it.second->place= tmp.first;
+		}
 		// cout<<"" /
 	}
 	// return nullptr; // re
