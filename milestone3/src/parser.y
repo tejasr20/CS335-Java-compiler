@@ -11,7 +11,7 @@
 #include "symbol_table.h"
 #include "typecheck.h"
 #include "3ac.h"
-
+set<string> is_static;
 using namespace std;
 extern int yylineno;
 extern FILE* yyin;
@@ -42,7 +42,10 @@ int previous_if_found = 0;
 int stop_compiler = 0;		// shows error while parsing
 int isArray = 0;			// true when array is declared
 int type_delim = 0;	
-int debug_mode = 0;		
+int debug_mode = 0;	
+int param_size= 0;
+int func_size= 0;
+int field_size= 0;
 
 string funcName = ""; // global variables. 
 string className= "";
@@ -61,6 +64,7 @@ vector<sym_entry*> args;
 vector<string> idList;
 vector<string> currArgs;
 
+vector<string> classNamelist;
 vector<qid> initializer_list_values;
 vector<int> array_dims;
 map<string, vector<int> > arr_dimensions;
@@ -69,6 +73,7 @@ map<string, vector<int> > gotolablelist;
 map<string, int> gotolabel;
 map<string, int> func_usage_map;
 map<string, vector<qid>> global_array_init_map;
+// vector<string, 
 
 extern int yyrestart(FILE*);
 int warning(const char* s) ;
@@ -179,7 +184,13 @@ Identifier  :  IDENTIFIER 	{
 											$$->size = GetSize(temp); // returns size of type of the identifier s. 
 											$$->temp_name = string($1); 
 											//--3AC
-											$$->place = qid(string($1), Lookup(s));
+											sym_entry* sym= Lookup(s);
+											// cout<<"Badmaash "<<sym->place<<endl;
+											if(find(classNamelist.begin(), classNamelist.end(), sym->type)!=classNamelist.end())
+											{
+												 $$->place= qid(sym->place, NULL);
+											}
+											else $$->place = qid(string($1), Lookup(s));
 											$$->nextlist.clear();
 										}
 									
@@ -205,7 +216,8 @@ PrimitiveType  : Numbers 	{$$ = $1;}		 // type name as string has been stored in
 									if(type == "") type ="int";
 									else type += " int";
 									// boolean treated as one byte
-									$$->size= 1;
+									$$->size= 4;
+									$$->type= "bool";
 							}  															
 			   ;
 
@@ -221,6 +233,7 @@ Integers  :  LONG 	{
 							// long long not likely to occur 
 							else type += " " + string($1);
 							$$->size= 8;
+							$$->type= "long";
 					}																				
 			  |  BYTE 	{ 
 				  			$$ = create_AST_leaf($1, "BYTE");
@@ -229,6 +242,7 @@ Integers  :  LONG 	{
 							if(type == "") type = string($1);
 							else type += " " + string($1);
 							$$->size= 1;
+							$$->type= "byte";
 				  } 																				
 			  |  INT 	{ 
 							$$ = create_AST_leaf($1, "INT"); 
@@ -237,6 +251,7 @@ Integers  :  LONG 	{
 							if(type == "") type = string($1);
 							else type += " " + string($1);
 							$$->size= 4;
+							$$->type= "int";
 					}																				
 			  |  CHAR 	{ 
 				  			$$ = create_AST_leaf($1, "CHAR");
@@ -245,6 +260,7 @@ Integers  :  LONG 	{
 							if(type == "") type = string($1);
 							else type += " " + string($1);
 							$$->size= 1;
+							$$->type= "char";
 				 }																				
 			  |  SHORT 	{ 
 				  			$$ = create_AST_leaf($1, "SHORT"); 
@@ -253,6 +269,7 @@ Integers  :  LONG 	{
 							if(type == "") type = string($1);
 							else type += " " + string($1);
 							$$->size= 2;
+							$$->type= "short";
 			  }
 				| STRING {
 								$$ = create_AST_leaf($1, "STRING"); 
@@ -261,6 +278,7 @@ Integers  :  LONG 	{
 								if(type == "") type = "char*";
 								else type += " char*";
 								$$->size= 8;
+								$$->type= "String";
 			  }																		
 			  ;
 
@@ -282,7 +300,29 @@ FloatingPoint  :   DOUBLE 	{
 					}																		
 			  	   ;
 
-ClassType  :  ClassOrIntfaceType  	{$$ = $1;}																
+ClassType  :  ClassOrIntfaceType  	{
+						$$ = $1;
+						qid tmp = newtemp($$->type);
+						qid tmp1 = newtemp($$->type);
+						// cout<<"If found kdhe "<<if_found<<"\n";
+						int temp=1;
+						// cout<<"SISZEEC "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+						// cout<<"DA TYPEC IS "<<$2->type<<endl;
+						// for(int i=0;i<$3->dims.size();i++)
+						// {
+						// 	temp*=$3->dims[i];
+						// }
+						sym_entry* sym= Lookup(className);
+						cout<<"Found type is "<<sym->type<<endl;
+						if (sym ==nullptr){
+							yyerror(("Field size not found in class "+ className).c_str());
+						}
+						emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), tmp1, tmp, -1);	
+						$$->place= tmp1;
+						$$->expType= 3;
+						// qid tmp1 = newtemp($$->type);
+						// emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);	
+		}																
 		   ;
 
 IntfaceType  :  ClassOrIntfaceType 	{$$ = $1;}														
@@ -317,12 +357,13 @@ Name  :  QualName		{$$ = $1;}
 
 SimpleName  :  Identifier {
 								$$ = $1;
-								special_type= $1->temp_name;
+								// special_type= $1->temp_name;
 								// special_type was an attempt to recognise class names. 
 								// Not used. 
 						};
 
 QualName  :  Name FST IDENTIFIER {
+	// Name FST IDENTIFIER {
 		vector<treeNode> attr;
 		add_attribute(attr, $1, "", 1);
 		add_attribute(attr, create_AST_leaf($3, "IDENTIFIER"), "", 1);
@@ -346,11 +387,13 @@ QualName  :  Name FST IDENTIFIER {
 			else{
 				$$->type = r->type;
 				$$->temp_name = $1->temp_name + "." + temp;
-				
+				qid temp_var1 = newtemp($$->type);
+				emit(qid("=", r), qid(to_string(r->offset),NULL), qid("",NULL), temp_var1, -1);
 				qid temp_var = newtemp($$->type);
 				// adds a temporary variable(for 3AC) to symbol table. 
+				// cout<<"In qual name "<<$1->place.first<<endl;
 				sym_entry* attr_sym = retTypeAttrEntry(r);
-				emit(qid("member_access", NULL), $1->place, qid(string($3), attr_sym), temp_var, -1);
+				emit(qid("qualname", r), $1->place, temp_var1, temp_var, -1);
 				temp_var.second->array_dims = attr_sym->array_dims;
 				$$->place = temp_var;
 			}
@@ -470,6 +513,7 @@ Modifier  :  FINAL 				{
 										$$ = create_AST_leaf($1, "FINAL");
 										// Semantic
 										$$->type= string($1);
+										// $$->modifiers[0]=1;
 				 }																			
 		  |  PRIVATE 		{ 
 			  						$$ = create_AST_leaf($1, "PRIVATE");
@@ -568,6 +612,7 @@ ClassDec  :  Modifiers CLASS ClassName Super Intfaces C ClassBody 	{
 		$$ = create_AST_node("ClassDecn6", v);
 		classType= "private"; // by default it is private
 		type = "";
+		field_size=0;
 		string cName= className.substr(6, className.size()-6);
 		printSymbolTable(curr_table ,className + ".csv");
 		SymbolTableUpdation(className, 1);	
@@ -583,6 +628,7 @@ ClassDec  :  Modifiers CLASS ClassName Super Intfaces C ClassBody 	{
 		// Symbol table 
 		classType= string($1->type);
 		type = "";
+		field_size=0;
 		string cName= className.substr(6, className.size()-6);
 		printSymbolTable(curr_table ,className + ".csv");
 		SymbolTableUpdation(className, 1);
@@ -625,6 +671,7 @@ ClassDec  :  Modifiers CLASS ClassName Super Intfaces C ClassBody 	{
 		classType= string($1->type);
 		type = "";
 		string cName= className.substr(6, className.size()-6);
+		field_size=0;
 		printSymbolTable(curr_table ,cName + ".csv");
 		SymbolTableUpdation(className, 1);
 	}															
@@ -649,6 +696,7 @@ C: {
 ClassName: IDENTIFIER {
 							$$=$1;
 							className= "CLASS_"+string($1);
+							classNamelist.push_back(string($1));
 							// add 3AC support. 
 }
 
@@ -745,6 +793,18 @@ FieldDecn  :  Modifiers Type VariableDecltrs SCLN 		{
 			$$->nextlist = $3->nextlist;
 		}
 		else $$->is_error = 1;
+		cout<<"Field decn "<<$2->type<<" "<<type<<endl;
+		field_size+= GetSize($2->type);
+		sym_entry* sym= Lookup(className);
+		if (sym ==nullptr){
+			yyerror((className+ " not inserted in symbol table").c_str());
+		}
+		else 
+		{
+			sym->fieldsize= field_size;
+			cout<<"FIelddejnb2 "<<field_size<<" "<<sym->type<<endl;
+		}
+		// field_size=0;
 }																										
 				  |  Type VariableDecltrs SCLN 				{
 		vector<treeNode> v;
@@ -761,6 +821,18 @@ FieldDecn  :  Modifiers Type VariableDecltrs SCLN 		{
 			$$->nextlist = $2->nextlist;
 		}
 		else $$->is_error = 1;
+		//cout<<"Field decn1 "<<$2->type<<" "<<type<<endl;
+		field_size+= GetSize($2->type);
+		sym_entry* sym= Lookup(className);
+		if (sym ==nullptr){
+			yyerror((className+ " not inserted in symbol table").c_str());
+		}
+		else 
+		{
+			sym->fieldsize= field_size;
+			//cout<<"FIelddejnb2 "<<field_size<<" "<<sym->type<<endl;
+		}
+		// field_size=0;
 		// $$->type= $1->type;
 		// $$->size= $1->size;
 }																											
@@ -826,6 +898,7 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 										}
 										else $$->is_error = 1;
 }														
+
 					|  VariableDecltrId EQUALS NEXT_QUAD VariableInit {
 		vector<treeNode> v;
 		add_attribute(v, $1, "", 1);
@@ -849,7 +922,14 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 						// cout<<"HI THEN "<<$4->type<<"\n";
 						$1->type= $4->type;
 				}
+				// cout<<"Inserting symbol "<<$4->place.first<<endl;
 				insertSymbol(*curr_table, $1->temp_name, $1->type, $1->size, 1, NULL);
+				// $$->place= $4->place;
+				sym_entry* sym= Lookup($1->temp_name);
+				if(find(classNamelist.begin(), classNamelist.end(), $1->type)!=classNamelist.end())
+				{
+					sym->place= $4->place.first;
+				}
 			}
 			
 			if(!checkIfVoid($1->type)){			
@@ -864,7 +944,7 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 					// isArray=0;
 					if($4->dims.size()!=0)
 					{
-						cout<<"New Dim size is "<<$4->dims.size()<<" Dim size is "<<arr_dimensions[$1->temp_name].size()<<"\n";
+						// cout<<"New Dim size is "<<$4->dims.size()<<" Dim size is "<<arr_dimensions[$1->temp_name].size()<<"\n";
 						if($4->dims.size()<arr_dimensions[$1->temp_name].size())
 						{
 							yyerror(("Invalid creation of array " + $1->temp_name + ": lesser parameters passed in NEW").c_str()); 
@@ -916,10 +996,15 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 					}
 				}
 				else{
-					assign_exp("=", $1->type,$1->type, $4->type, $1->place, $4->place);
+					// cout<<"IN heredbwid"<<$1->type<<"\n";
+					if(find(classNamelist.begin(), classNamelist.end(), $1->type)==classNamelist.end())
+					{
+						assign_exp("=", $1->type,$1->type, $4->type, $1->place, $4->place);
+					}
 				}
 				
 				$$->place = $1->place;
+				// cout<<"Plce is "<<$1->place.first<<endl;
 				$$->nextlist = $4->nextlist;
 				backpatch($1->nextlist, $3);
 			}
@@ -943,12 +1028,15 @@ VariableDecltrId  :  IDENTIFIER		{
 								if(type=="")
 								{
 									$$->type= className.substr(6, className.size()-6);
+									// sym_entry* sym= Lookup(string($1));
+									// $$->place= 
 								}
 								$$->temp_name = string($1);
 								$$->size = GetSize(type);
 
 								//3AC
-								$$->place = qid($$->temp_name, NULL);
+								// if(type=="") $$->place= sym->sym_place;
+								 $$->place = qid($$->temp_name, NULL);
 			}															
 					  |  VariableDecltrId OSQ CSQ {
 		vector<treeNode> v;
@@ -978,7 +1066,7 @@ VariableDecltrId  :  IDENTIFIER		{
 					arr_index[$1->temp_name]= 0;
 				}
 				else arr_dimensions[$1->temp_name].push_back(0);
-				cout<<"dims of array "<<$$->temp_name<<" is "<<arr_dimensions[$1->temp_name].size()<<"\n";
+				// cout<<"dims of array "<<$$->temp_name<<" is "<<arr_dimensions[$1->temp_name].size()<<"\n";
 				isArray = 1;
 			}
 			else {
@@ -1031,7 +1119,12 @@ MethodDecn  :  MethodHead F MethodBody {
 			string func_3AC= cName+ "."+ fName;
 			printSymbolTable(curr_table ,funName);
 			SymbolTableUpdation(fName,1);
-			emit(qid("FUNC_" + func_3AC + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
+			sym_entry* sym= Lookup(fName);
+			cout<<"hijk "<<sym->size<<endl;
+			sym->funcsize= sym->size;
+			if(sym==nullptr) cout<<"THIS IS NULL BRODIJ "<<funcName<<"\n";
+			emit(qid("FUNC_" + func_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
+			cout<<"IN PARSER "<<fName<<" "<<sym->type<<" "<<sym->size<<endl;
 			backpatch_remaining();
 		}
 	}																											
@@ -1039,7 +1132,7 @@ MethodDecn  :  MethodHead F MethodBody {
 
 F: 				{
 						$$ = new Node();
-						// clear_paramoffset();
+						clear_paramoffset();
 						// param_offset = -4;
 						
 						if (gst.find(funcName) != gst.end()){
@@ -1049,8 +1142,22 @@ F: 				{
 						else{
 							// cout<<""
 							CreateSymbolTable(funcName, funcType,1, 1);
+							sym_entry* sym= Lookup(funcName);
+							if(sym==nullptr) cout<<"THIS IS NULL BRO3 "<<funcName<<"\n";
+							emit(qid("FUNC_size",sym),qid("",NULL),qid("",NULL),qid("",NULL),-1);
+							// cout<<"Here "<<sym->type<<endl;
+							// cout<<"Param size is "<<param_size<<endl;
+							cout<<funcType<<" TYPE "<<funcName<<"\n";
+							if(funcType=="") sym->paramsize= param_size;
+							else sym->paramsize= param_size+ GetSize(funcType);// To accomodate space for return value. 
+							// cout<<"INSIDE F my func size is "<<sym->size<<endl;
+				
+							// cout<<"Function locals and temporaries size is "<<sym->size<<endl;
+							// sym->funcsize= sym->size;
+							// cout<<"sehhhh is "<<param_size<<endl;
+							param_size=0;
 							$$->name = (funcName);
-							block_count = 1;
+							block_count = 1; 
 							type = "";
 							type_delim = 0;
 						}
@@ -1113,7 +1220,9 @@ MethodHead  :  Modifiers Type MethodDecltr Throws {
 		add_attribute(v, $1, "", 1);
 		add_attribute(v, $2, "", 1);
 		add_attribute(v, $3, "", 1);
+		cout<<"------**   "<<$3->temp_name<<"\n";
 		$$ = create_AST_node("MethodHead3", v);
+		// if($1 == "static")is_static.insert($3);
 	}																									
 			  																											
 			  ;
@@ -1164,6 +1273,9 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 					//3AC
 					$$->place = qid($$->temp_name, NULL);
 					backpatch($4->nextlist,$6);
+					// cout<<"IN INII "<<funcName<<endl;
+					// sym_entry* sym= Lookup(funcName);
+					// if(sym==nullptr) cout<<"THIS IS NULL BRO1 "<<funcName<<"\n";
 					emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
 					// cout<<"CRASH\n";
 				}
@@ -1177,7 +1289,9 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 						//3AC
 						$$->place = qid($$->temp_name, NULL);
 						backpatch($4->nextlist,$6);
-						emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
+						sym_entry* sym= Lookup($1->temp_name);
+						if(sym==nullptr) cout<<"THIS IS NULL BRO\n";
+						emit(pair<string,sym_entry*>("FUNC_" + func_3AC + " start :",sym),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),pair<string,sym_entry*>("",NULL),-2);
 					}
 					else {
 						yyerror(("Conflicting types for function " + $1->temp_name).c_str());
@@ -1276,7 +1390,7 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 
 M: 							{
 	type ="";
-	cout<<"Function flag set to zero in func declaration\n";
+	// cout<<"Function flag set to zero in func declaration\n";
 		func_flag = 0;
 		funcArgs.clear();
 		CreateParameterList();
@@ -1319,8 +1433,9 @@ FormalParam  :  Type VariableDecltrId 			{
 					$$->is_error = 1;
 				}
 				else {
-					// paramInsert(*curr_table, $2->temp_name, $2->type, $2->size, true, NULL);
-					insertSymbol(*curr_table, $2->temp_name, $2->type, $2->size, 1, NULL);
+					paramInsert(*curr_table, $2->temp_name, $2->type, $2->size, true, NULL);
+					param_size+=$2->size;
+					// insertSymbol(*curr_table, $2->temp_name, $2->type, $2->size, 1, NULL);
 				}
 				funcArgs.push_back($2->type);
 			}
@@ -1410,7 +1525,12 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			printSymbolTable(curr_table ,constName);
 			constructor_num++;
 			SymbolTableUpdation(fName,1);
-			emit(qid("FUNC_" +  constr_3AC + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
+			sym_entry* sym= Lookup(fName);
+			cout<<"hijk1 "<<sym->size<<endl;
+			sym->funcsize= sym->size;
+			if(sym==nullptr) cout<<"THIS IS NULL BRODIJ "<<funcName<<"\n";
+			// emit(qid("FUNC_" + func_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
+			emit(qid("FUNC_" +  constr_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
 			backpatch_remaining();
 		}
 	}												
@@ -1453,8 +1573,12 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			printSymbolTable(curr_table ,constName);
 			constructor_num++;
 			// printSymbolTable(curr_table ,fName + ".csv");
+			sym_entry* sym= Lookup(fName);
+			cout<<"hijk1 "<<sym->size<<endl;
+			sym->funcsize= sym->size;
+			if(sym==nullptr) cout<<"THIS IS NULL BRODIJ "<<funcName<<"\n";
 			SymbolTableUpdation(fName,1);
-			emit(qid("FUNC_" +  constr_3AC  + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
+			emit(qid("FUNC_" +  constr_3AC  + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
 			backpatch_remaining();
 		}
 	}											
@@ -1497,7 +1621,11 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			constructor_num++;
 			// printSymbolTable(curr_table ,fName + ".csv");
 			SymbolTableUpdation(fName,1);
-			emit(qid("FUNC_" +  constr_3AC + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
+			sym_entry* sym= Lookup(fName);
+			cout<<"hijk1 "<<sym->size<<endl;
+			sym->funcsize= sym->size;
+			if(sym==nullptr) cout<<"THIS IS NULL BRODIJ "<<funcName<<"\n";
+			emit(qid("FUNC_" +  constr_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
 			backpatch_remaining();
 		}
 	}				
@@ -2588,10 +2716,94 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		add_attribute(attr, $2, "", 1);
 		add_attribute(attr, $4, "", 1);
 		$$ = create_AST_node("ClassInstCreationExpr1", attr);
-
+// cout<<"NISH3\n";
 		if(type == "") type =  $2->type;
 		else type += " " + string($1);
 		$$->size= 1;
+		string temp= $2->type;
+			// $$->isInit = $3->isInit; // { currArgs.push_back(vector<string>()); }  used in theirs 
+			// cout<<"p2 "<<$2->type<<endl;
+		// string temp = postfixExpr("FUNC_"+$2->type,3);
+			// cout<<"p1 "<<temp<<endl;
+		// if(temp.empty()){
+		// 	temp = getFuncType($2->temp_name);
+		// }
+		int fl=0;
+		if(!($2->is_error || $4->is_error) && $2->expType!=4 && fl==0){
+			// cout<<"ABIHSIHEIH "<<temp<<endl;
+			if(!temp.empty()){	
+				// cout<<"NISH2\n";
+				$$->type = temp;
+				if($2->expType ==3){
+					// cout<<"NISH2\n";
+					vector<string> funcArgs = getFuncArgs($2->temp_name);
+					vector<string> tempArgs =currArgs;
+					for(int i=0;i<tempArgs.size();i++){
+						// cout<<tempArgs[i]<<"F\n";
+
+					}	
+					for(int i=0;i<funcArgs.size();i++){
+						if(funcArgs[i]=="...")break;
+						if(tempArgs.size()==i){
+							yyerror(("Too few Arguments to constructor " + $2->temp_name).c_str());
+							break;
+						}
+						string msg = chkType(funcArgs[i],tempArgs[i]);
+
+						if(msg =="warning"){
+							warning(("Incompatible conversion of " +  tempArgs[i] + " to parameter of type " + funcArgs[i]).c_str());
+						}
+						else if(msg.empty()){
+							yyerror(("Incompatible Argument to the constructor " + $2->temp_name).c_str());
+							$$->is_error = 1;
+							break;
+						}
+						if(i==funcArgs.size()-1 && i<tempArgs.size()-1){
+							yyerror(("Too many Arguments to constructor " + $2->temp_name).c_str());
+							$$->is_error = 1;
+							break;
+						}
+
+					}	
+					// cout<<"Here NISH\n";
+					//--3AC
+					if(!$$->is_error){
+						int _idx = -1;
+						// here, emitting a -1: index is set to code.size() here. 
+						if($$->type == "char*" && $$->place.second == NULL) _idx = -4;
+						emit(qid("param", NULL), $2->place, qid("", NULL), qid("", NULL), _idx);
+						qid q = newtemp($$->type);
+						// $$->place = q;
+						$$->place= $2->place;
+						$$->nextlist.clear();
+						// cout<<"name is "<<$2->temp_name<<"\n";
+						sym_entry* sym= Lookup($2->temp_name);
+						// cout<<"CHECK "<<sym->paramsize<<"\n";
+						emit(qid("CALL", NULL), qid($2->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
+						// currArgs.pop_back();
+						
+						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
+							func_usage_map[$2->temp_name] = 1;
+						}
+					}
+
+				}
+			}
+			else{
+				// cout<<"NISH4\n";
+				yyerror("Invalid function call");
+				$$->is_error=1;
+			}
+		}
+		else{
+			// cout<<"NISH5\n";
+			if($2->expType==4){
+				yyerror("constant expression cannot be used as lvalue");
+			}
+			$$->is_error=1;
+			// cout<<"NISH1\n";
+		}
+			
 	}								
 								| NEW ClassType OS CS 		{
 		vector<treeNode> attr;
@@ -2602,9 +2814,75 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		if(type == "") type = $2->type;
 		else type += " " + $2->type;
 		$$->size= 1;
+
+		$$->isInit = 1;
+		string temp = postfixExpr($2->type,2);
+		string blank_s = "";
+		currArgs.push_back(blank_s ); 
+
+		if(temp.empty()){
+			temp = getFuncType($2->temp_name);
+		}
+
+		if(!($2->is_error) && $2->expType!=4){
+			if(!temp.empty()){	
+				$$->type = temp;
+				if($2->expType == 3){
+					vector<string> funcArg = getFuncArgs($2->temp_name);
+					if(!funcArg.empty()){
+						yyerror(("Too few Arguments to constructor " + $2->temp_name).c_str());
+					}
+					else{
+
+					//--3AC
+						qid q = newtemp(temp);
+						$$->nextlist.clear();
+
+						emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
+						currArgs.pop_back();
+						//if(currArgs.size()>1)currArgs.push_back($$->type) ;
+						// $$->place = q;
+						$$->place= $2->place;
+
+						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
+							func_usage_map[$2->temp_name] = 1;
+						}
+					}
+				}
+			}
+			else{
+				yyerror(("Constructor " + $2->temp_name + " not declared in this scope").c_str());
+				$$->is_error=1;
+			}
+		}
+		else{
+			if($2->expType==4){
+				yyerror("constant expression cannot be used as lvalue");
+			}
+			$$->is_error=1;
+		}
 	}												
 								;
- 
+/* 				
+Alloc: 					{
+			cout<<"in alloc "<<type<<endl;
+			qid tmp = newtemp(type);
+			// cout<<"If found kdhe "<<if_found<<"\n";
+			int temp=1;
+			// cout<<"SISZEEC "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+			// cout<<"DA TYPEC IS "<<$2->type<<endl;
+			// for(int i=0;i<$3->dims.size();i++)
+			// {
+			// 	temp*=$3->dims[i];
+			// }
+			sym_entry* sym= Lookup(className);
+			cout<<"Found type is "<<sym->type<<endl;
+			if (sym ==nullptr){
+				yyerror(("Field size not found in class "+ className).c_str());
+			}
+			emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);
+	}
+  */
 
 ArgLst : Expr 			{
 							$$ = $1;
@@ -2613,7 +2891,11 @@ ArgLst : Expr 			{
 								$$->isInit = $1->isInit;
 								string temp_s;
 								temp_s = $1->type;
+								// cout<<"The size of currArgs is "<<currArgs.size()<<endl;
+								
+								// cout<<$1->int_val<<"\n";
 								currArgs.push_back((temp_s));
+								// cout<<currArgs[0]<<"C\n";
 								// currArgs.push_back($1->type);
 								$$->type = "void";
 
@@ -2643,6 +2925,7 @@ ArgLst : Expr 			{
 
 												if($1->isInit && $3->isInit) $$->isInit=1;
 												currArgs.push_back($3->type);
+												cout<<$3->int_val<<"\n";
 												$$->type = "void";
 
 												//--3AC
@@ -2761,6 +3044,7 @@ ArrOp : Name OSQ Expr CSQ 	{
 				//returns the symbol table entry to the temporary variable 
 				//array_dims is a vector<int> in sym_entry*
 				// $$->place= temp_var1;
+
 				if(arr_index[$1->temp_name]==arr_dimensions[$1->temp_name].size()) 
 				{
 					qid temp_var = newtemp($$->type); 
@@ -2896,45 +3180,55 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 		if($1->temp_name=="System.out.println")
 		{
 			fl=1;
+			// cout<<"YEA \n";
 		}
-		if(!($1->is_error || $3->is_error) && $1->expType!=4 && fl==0){
+		if(!($1->is_error || $3->is_error) && $1->expType!=4){
 			if(!temp.empty()){	
 				$$->type = temp;
 				if($1->expType ==3){
 					vector<string> funcArgs = getFuncArgs($1->temp_name);
 					vector<string> tempArgs =currArgs;
-					for(int i=0;i<funcArgs.size();i++){
-						if(funcArgs[i]=="...")break;
-						if(tempArgs.size()==i){
-							yyerror(("Too few Arguments to Function " + $1->temp_name).c_str());
-							break;
-						}
-						string msg = chkType(funcArgs[i],tempArgs[i]);
+					if(fl==0)
+					{
+						for(int i=0;i<funcArgs.size();i++)
+						{
+							if(funcArgs[i]=="...")break;
+							if(tempArgs.size()==i){
+								yyerror(("Too few Arguments to Function " + $1->temp_name).c_str());
+								break;
+							}
+							string msg = chkType(funcArgs[i],tempArgs[i]);
 
-						if(msg =="warning"){
-							warning(("Incompatible conversion of " +  tempArgs[i] + " to parameter of type " + funcArgs[i]).c_str());
-						}
-						else if(msg.empty()){
-							yyerror(("Incompatible Argument to the function " + $1->temp_name).c_str());
-							$$->is_error = 1;
-							break;
-						}
-						if(i==funcArgs.size()-1 && i<tempArgs.size()-1){
-							yyerror(("Too many Arguments to Function " + $1->temp_name).c_str());
-							$$->is_error = 1;
-							break;
-						}
+							if(msg =="warning"){
+								warning(("Incompatible conversion of " +  tempArgs[i] + " to parameter of type " + funcArgs[i]).c_str());
+							}
+							else if(msg.empty()){
+								yyerror(("Incompatible Argument to the function " + $1->temp_name).c_str());
+								$$->is_error = 1;
+								break;
+							}
+							if(i==funcArgs.size()-1 && i<tempArgs.size()-1){
+								yyerror(("Too many Arguments to Function " + $1->temp_name).c_str());
+								$$->is_error = 1;
+								break;
+							}
 
-					}	
-
+						}	
+					}
+					
 					//--3AC
 					if(!$$->is_error){
 						qid q = newtemp($$->type);
 						$$->place = q;
+						
 						$$->nextlist.clear();
-
-						emit(qid("CALL", NULL), qid($1->temp_name,NULL), qid(to_string(currArgs.size()), NULL), q, -1);
-						currArgs.pop_back();
+						// cout<<"name is "<<$1->temp_name<<"\n";
+						sym_entry* sym= Lookup($1->temp_name);
+						//cout<<"CHECK "<<sym->paramsize<<"\n";
+						if($1->temp_name== "System.out.println") $1->temp_name= "print";
+						emit(qid("CALL", NULL), qid($1->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
+						// currArgs.pop_back();
+						currArgs.clear();
 
 						if(func_usage_map.find($1->temp_name) != func_usage_map.end()){
 							func_usage_map[$1->temp_name] = 1;
@@ -2983,7 +3277,8 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						$$->nextlist.clear();
 
 						emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
-						currArgs.pop_back();
+						// currArgs.pop_back();
+						currArgs.clear();
 						//if(currArgs.size()>1)currArgs.push_back($$->type) ;
 						$$->place = q;
 
@@ -3089,8 +3384,9 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						$$->nextlist.clear();
 
 						emit(qid("CALL", NULL), qid($1->temp_name,NULL), qid(to_string(currArgs.size()), NULL), q, -1);
-						currArgs.pop_back();
+						// currArgs.pop_back();
 
+						currArgs.clear();
 						if(func_usage_map.find($1->temp_name) != func_usage_map.end()){
 							func_usage_map[$1->temp_name] = 1;
 						}
@@ -3174,7 +3470,8 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						$$->nextlist.clear();
 
 						emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
-						currArgs.pop_back();
+						// currArgs.pop_back();
+						currArgs.clear();
 						//if(currArgs.size()>1)currArgs.push_back($$->type) ;
 						$$->place = q;
 
@@ -3233,7 +3530,21 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 		add_attribute(v, $3, "", 1);
 		$$ = create_AST_node("ArrCreationExpr2", v);
 		$$->dims= $3->dims;
-		cout<<"NEW "<<$3->dims.size()<<" "<<$3->dims[0]<<"\n";
+		//cout<<"NEW "<<$3->dims.size()<<" "<<$3->dims[0]<<"\n";
+
+		qid tmp = newtemp($$->type);
+		// cout<<"If found kdhe "<<if_found<<"\n";
+		int temp=1;
+		//cout<<"SISZEE "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
+		//cout<<"DA TYPE IS "<<$2->type<<endl;
+		for(int i=0;i<$3->dims.size();i++)
+		{
+			temp*=$3->dims[i];
+		}
+		emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), tmp, -1);
+		// emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), qid("", NULL), -1);
+		// $$->place = tmp;
+
 		// $$= $3;
 	}						
 						| NEW ClassOrIntfaceType DimExprs Dims {
@@ -3252,6 +3563,7 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 		$$ = create_AST_node("ArrCreationExpr4", v);
 	}				
 						;
+						
 
 DimExprs : DimExprs DimExpr { 
 			vector<treeNode> attr;
@@ -3293,7 +3605,7 @@ Assign  :  LeftHandSide AssignOp {if_found = 0;} Expr 	{
 							add_attribute(attr, $1, "", 1);
 							add_attribute(attr, $4, "", 1);
 							$$ = create_AST_node($2,attr);
-							// cout<<"Assign Expression "<<$1->temp_name<<" "<<$1->type<<" "<<string($2)<<" "<<$4->temp_name<<" "<<$4->type<<"\n";
+							// //cout<<"Assign Expression "<<$1->temp_name<<" "<<$1->type<<" "<<string($2)<<" "<<$4->temp_name<<" "<<$4->type<<"\n";
 
 							//Semantics
 		string temp = asgnExpr($1->type,$4->type,string($2));
@@ -3310,7 +3622,7 @@ Assign  :  LeftHandSide AssignOp {if_found = 0;} Expr 	{
 				if($1->expType == 3 && $4->isInit){
 					UpdateInit($1->temp_name);
 				}
-				cout<<"Type of first arg "<<$1->type<<"\n";
+				// cout<<"Type of first arg "<<$1->type<<"\n";
 				// 3ac 
 				int num = assign_exp($2, $$->type, $1->type, $4->type, $1->place, $4->place);
 				$$->place = $1->place;

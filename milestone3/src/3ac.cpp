@@ -5,6 +5,7 @@ using namespace std;
 
 vector<quad> code;
 long long cntr = 0;
+int f_flag=0;// used for printing stackpointer updation in constructor, because they dont return 
 
 void emit(qid op, qid arg1, qid arg2, qid res, int idx){
     quad temp;
@@ -110,7 +111,7 @@ map<int,string> mm;
 vector<int> labelPlace;
 map<int,string> findLabel;
 int labelIdx = 0;
-
+vector<string> checkArrPtr;
 
 void print3AC_code(){
     ofstream tac_file;
@@ -143,7 +144,8 @@ void print3AC_code(){
     }
     for(int i = 0;i<code.size();i++){
         string s1 = code[i].op.first;
-        if(findLabel.find(i)!=findLabel.end()){
+        if(findLabel.find(i)!=findLabel.end() && s1!="RETURN"){
+			// cout<<"YE\n";
             final_3AC<<findLabel[i]<<": ";
         }
         if(s1[0] == '+' || s1[0] == '-' || s1[0] == '*' || s1[0] == '/'){
@@ -154,14 +156,35 @@ void print3AC_code(){
                  final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<" "<<code[i].op.first<<" "<<code[i].arg2.first<<"\n";
             }
         }
+        else if(code[i].op.first == "[ ]"){
+            final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<" + "<<code[i].arg2.first<<"\n";
+            checkArrPtr.push_back(code[i].res.first);
+        }
         else if(code[i].op.first == "="){
-            final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<"\n";
+            if(count(checkArrPtr.begin(), checkArrPtr.end(), code[i].res.first) && !(count(checkArrPtr.begin(), checkArrPtr.end(), code[i].arg1.first))){
+                final_3AC<<"*("<<code[i].res.first<<") = "<<code[i].arg1.first<<"\n";
+            }
+            else if(!(count(checkArrPtr.begin(), checkArrPtr.end(), code[i].res.first)) && (count(checkArrPtr.begin(), checkArrPtr.end(), code[i].arg1.first))){
+                final_3AC<<code[i].res.first<<" = *("<<code[i].arg1.first<<")\n";
+            }
+            else if((count(checkArrPtr.begin(), checkArrPtr.end(), code[i].res.first)) && (count(checkArrPtr.begin(), checkArrPtr.end(), code[i].arg1.first))){
+                final_3AC<<"*("<<code[i].res.first<<") = *("<<code[i].arg1.first<<")\n";
+            }
+            else{
+                final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<"\n";
+            }
+        }
+		 else if(code[i].op.first == "qualname"){
+            final_3AC<<code[i].res.first<<" = *("<<code[i].arg1.first<<" + "<<code[i].arg2.first<<")\n";
         }
         else if(code[i].op.first == "param"){
             final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
         }
         else if(code[i].op.first == "CALL"){
+			// sym_entry* sym= Lookup(code[i].arg1.first);
+			final_3AC<<"stackpointer +"<<code[i].arg1.second->paramsize<<"\n";
             final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<", "<<code[i].arg2.first<<"\n";
+			final_3AC<<"stackpointer -"<<code[i].arg1.second->paramsize<<"\n";
         }
         else if(code[i].arg1.first == "IF"){
             if(mm.find(code[i].idx)!=mm.end()){
@@ -183,19 +206,45 @@ void print3AC_code(){
                 final_3AC<<"goto "<<mm[code[i].idx]<<"\n";
             }
         }
+		else if(s1=="NEW")
+		{
+			final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<endl;
+			final_3AC<<"param "<<code[i].res.first<<endl;
+			final_3AC<<"stackpointer +"<<code[i].arg1.first<<endl;
+			final_3AC<<"call allocmem 1"<<endl;
+			final_3AC<<"stackpointer -"<<code[i].arg1.first<<endl;
+			final_3AC<<code[i].arg2.first<<" = popparam "<<endl;
+		}
         else if(code[i].arg1.first != "" && code[i].op.first != "" && code[i].arg2.first !="" && code[i].res.first!=""){
             final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<" "<<code[i].op.first<<" "<<code[i].arg2.first<<"\n";
         }
         else if(s1.substr(0,5)=="FUNC_"){
-            if (s1.substr(s1.size()-5,3)=="end"){
-                final_3AC<<"endfunc\n";
+			 if (s1=="FUNC_size")
+			 {
+				//  cout<<"WHTF "<<s1.substr(s1.size()-4,4)<<endl;
+				 final_3AC<<"stackpointer +"<<code[i].op.second->funcsize<<"\n";
+			 }
+            else if (s1.substr(s1.size()-5,3)=="end"){
+                 if(f_flag==0) final_3AC<<"stackpointer -"<<code[i].arg1.first<<"\n";
+				final_3AC<<"endfunc\n";
+				f_flag=0;
             }
             else{
-              
-                final_3AC<<s1.substr(5,s1.size()-13)<<":\n beginfunc\n";
+            
+				final_3AC<<s1.substr(5,s1.size()-13)<<":\nbeginfunc\n";
+				
+				// final_3AC<<"stackpointer +20\n";
             }
-        }
+		}
+		
         else if(s1=="RETURN"){
+			
+			 final_3AC<<"stackpointer -20\n";
+			  if(findLabel.find(i)!=findLabel.end()){
+			// cout<<"YE\n";
+            final_3AC<<findLabel[i]<<": ";
+       	 }
+			 f_flag=1;
             final_3AC<<"return "<<code[i].arg1.first<<endl;
         }
         else if(s1.find("to")!=-1){
