@@ -1,53 +1,33 @@
 3AC code
-test0.max:
+MatrixAdditionExample.main:
 beginfunc
-stackpointer +20
-_t0 = a +int b
-_t1 = _t0 +int c
-c = _t1
-_t2 = a > b
-if _t2 goto L1
-goto L2
-L1: _t3 = a
-goto L3
-L2: _t3 = b
-stackpointer -20
-L3: return _t3
-endfunc
-test0.ctor1:
-beginfunc
-stackpointer +8
-a = a1
-b = b1
-stackpointer -8
-endfunc
-test0.main:
-beginfunc
-stackpointer +52
-n = 4
-param 5
-param n
+stackpointer +104
+_t0 = 12
+param _t0
 stackpointer +12
-CALL max, 2
-stackpointer -12
-n = _t4
-_t5 = 8
-param _t5
-stackpointer +8
 call allocmem 1
-stackpointer -8
-_t6 = popparam 
-param 5
-param 7
-param _t6
-stackpointer +8
-CALL test0, 2
-stackpointer -8
-_t8 = 0
-_t9 = *(_t6 + _t8)
-param _t9
-stackpointer +0
-CALL print, 3
-stackpointer -0
-stackpointer -52
+stackpointer -12
+_t1 = popparam 
+_t2 = 2 * 4
+_t3 = _t1 + _t2
+*(_t3) = 7
+_t4 = 48
+param _t4
+stackpointer +48
+call allocmem 1
+stackpointer -48
+_t5 = popparam 
+_t6 = 2 * 16
+_t7 = 3 * 4
+_t8 = _t6 + _t7
+_t9 = _t5 + _t8
+*(_t9) = 1
+_t10 = 1 * 4
+_t11 = _t1 + _t10
+_t12 = 1 * 16
+_t13 = 2 * 4
+_t14 = _t12 + _t13
+_t15 = _t5 + _t14
+*(_t11) = *(_t15)
+stackpointer -104
 endfunc

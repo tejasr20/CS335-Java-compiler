@@ -232,7 +232,6 @@ void print3AC_code(){
             else{
             
 				final_3AC<<s1.substr(5,s1.size()-13)<<":\nbeginfunc\n";
-				
 				// final_3AC<<"stackpointer +20\n";
             }
 		}

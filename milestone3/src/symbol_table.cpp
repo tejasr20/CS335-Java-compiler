@@ -156,7 +156,7 @@ void SymbolTableUpdation(string id,  int offset_flag){
 	if(entry) 
 	{
 		entry->size = blockSz.top();
-		cout<<"Function locals and temporaries size is "<<entry->size<<endl;
+		// cout<<"Function locals and temporaries size is "<<entry->size<<endl;
 		entry->funcsize= entry->size;
 	}
 
@@ -325,7 +325,7 @@ ull getStructsize(string struct_name){
 }
 
 void CreateParameterList(){
-	cout<<"GoFFSET "<<Goffset.top()<<endl;
+	// cout<<"GoFFSET "<<Goffset.top()<<endl;
 	Loffset.push(Goffset.top());
 	CreateSymbolTable("dummyF_name", "", 1,1);
 	fl = 1; 
@@ -414,7 +414,7 @@ void clear_paramoffset()
 // insert function parameters into the symbol table of the function
 void paramInsert(sym_table& table, string id, string type, int size, bool is_init, sym_table* ptr){
 	table.insert(make_pair(id, AddEntry(type, size, is_init, param_offset-size, ptr)));
-	cout<<id<<" "<<param_offset-size<<"\n";
+	// cout<<id<<" "<<param_offset-size<<"\n";
 	if(type[type.length()-1] == '*' && !array_dims.empty()){
 		size = 4;
 		vector<int> temp;
