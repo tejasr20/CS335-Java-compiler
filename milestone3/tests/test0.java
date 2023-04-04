@@ -46,9 +46,9 @@ public class test0 {
 	int x;
     double y;
 
-	test0(int x, double y) {
-		this.x = x;
-		this.y = y;
+	test0(int x1, double y1) {
+		this.x = x1;
+		this.y = y1;
 	}
     public static void main(String[] args /*so that we can compile with javac*/) {
     	test0 a = new test0(2,3.14);

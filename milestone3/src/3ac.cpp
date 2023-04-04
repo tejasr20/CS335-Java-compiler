@@ -219,20 +219,23 @@ void print3AC_code(){
             final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<" "<<code[i].op.first<<" "<<code[i].arg2.first<<"\n";
         }
         else if(s1.substr(0,5)=="FUNC_"){
-            if (s1.substr(s1.size()-5,3)=="end"){
-				
-                 if(f_flag==0) final_3AC<<"stackpointer -20\n";
+			 if (s1=="FUNC_size")
+			 {
+				//  cout<<"WHTF "<<s1.substr(s1.size()-4,4)<<endl;
+				 final_3AC<<"stackpointer +"<<code[i].op.second->funcsize<<"\n";
+			 }
+            else if (s1.substr(s1.size()-5,3)=="end"){
+                 if(f_flag==0) final_3AC<<"stackpointer -"<<code[i].arg1.first<<"\n";
 				final_3AC<<"endfunc\n";
 				f_flag=0;
             }
             else{
-              
-                
+            
 				final_3AC<<s1.substr(5,s1.size()-13)<<":\nbeginfunc\n";
-				 final_3AC<<"stackpointer "<<code[i].op.second->size<<"\n";
+				
 				// final_3AC<<"stackpointer +20\n";
             }
-        }
+		}
 		
         else if(s1=="RETURN"){
 			
