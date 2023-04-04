@@ -2630,7 +2630,7 @@ ArgLst : Expr 			{
 							$$->nextlist.clear();
 							int _idx = -1;
 							if($$->type == "char*" && $$->place.second == NULL) _idx = -4;
-							emit(qid("param", NULL), $$->place, qid("", NULL), qid("", NULL), _idx);
+							// emit(qid("param", NULL), $$->place, qid("", NULL), qid("", NULL), _idx);
 						}										
 			 | ArgLst COMMA Expr 		{
 											vector<treeNode> attr;
