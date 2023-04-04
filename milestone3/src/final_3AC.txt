@@ -1,33 +1,49 @@
 3AC code
-MatrixAdditionExample.main:
+test0.max:
 beginfunc
-stackpointer +104
-_t0 = 12
-param _t0
-stackpointer +12
+stackpointer +24
+_t0 = popparam
+_t1 = popparam
+c = 2
+_t0 = c
+_t2 = _t1 *int _t0
+_t3 = _t1 /int 2
+_t4 = _t2 +int _t3
+c = _t4
+stackpointer -20
+return 1
+endfunc
+test0.ctor1:
+beginfunc
+stackpointer +64
+_t5 = popparam
+_t6 = popparam
+_t7 = popparam
+_t8 = popparam
+_t9 = popparam
+_t10 = popparam
+_t11 = popparam
+_t12 = popparam
+a = _t11
+b = _t12
+stackpointer -64
+endfunc
+test0.main:
+beginfunc
+stackpointer +40
+_t13 = popparam
+_t14 = 8
+param _t14
+stackpointer +8
 call allocmem 1
-stackpointer -12
-_t1 = popparam 
-_t2 = 2 * 4
-_t3 = _t1 + _t2
-*(_t3) = 7
-_t4 = 48
-param _t4
-stackpointer +48
-call allocmem 1
-stackpointer -48
-_t5 = popparam 
-_t6 = 2 * 16
-_t7 = 3 * 4
-_t8 = _t6 + _t7
-_t9 = _t5 + _t8
-*(_t9) = 1
-_t10 = 1 * 4
-_t11 = _t1 + _t10
-_t12 = 1 * 16
-_t13 = 2 * 4
-_t14 = _t12 + _t13
-_t15 = _t5 + _t14
-*(_t11) = *(_t15)
-stackpointer -104
+stackpointer -8
+_t15 = popparam 
+param _t15
+param 5
+param 3
+stackpointer +8
+CALL test0
+_t16 = popparam
+stackpointer -8
+stackpointer -40
 endfunc

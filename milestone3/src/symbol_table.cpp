@@ -55,7 +55,7 @@ void InitSymbolTable(){
 	KeywordInsertion();
 }
 
-sym_entry* AddEntry(string type, ull size, bool init, ull offset, sym_table* ptr){
+sym_entry* AddEntry(string type, ull size, bool init, ll offset, sym_table* ptr){
 	sym_entry* new_sym = new sym_entry();
 	new_sym->type = type;
 	new_sym->size = size;
@@ -197,13 +197,16 @@ sym_entry* find_in_table(string id, sym_table* tab)
 
 
 sym_table* find_table(string id){
-	sym_table* temp = curr_table;
-	while(temp){
-		if((*temp).find(id)!=(*temp).end()) 
+	sym_table* child = curr_table;
+	sym_table* parent = parent_table[child];
+	// cout<<"id passed = "<<id<<endl;
+	while(parent){
+		if((*parent).find(id)!=(*parent).end()) 
 		{
-			return temp; // where to search 
+			return child; // where to search 
 		}
-		temp = parent_table[temp];
+		child = parent;
+		parent = parent_table[parent];
 	}
 	return nullptr; // returns nullptr if the element is not present in the symbol table 
 }
@@ -346,7 +349,15 @@ void insertSymbol(sym_table& table, string id, string type, ull size, bool is_in
 vector<string> getFuncArgs(string id){
 	vector<string> temp;
 	temp.push_back("#NO_FUNC");
-	if(func_arg.find(id) != func_arg.end()) return func_arg[id].second;
+	if(func_arg.find(id) != func_arg.end()) 
+	{
+		// for(int i=0;i<func_arg.size();i++)
+		// {
+		// 	cout<<func_arg[id].first<<" "<<func_arg[id].first<<" G ";
+		// }
+		// cout<<endl;
+		return func_arg[id].second;
+	}
 	else return temp;
 }
 
@@ -414,7 +425,8 @@ void clear_paramoffset()
 // insert function parameters into the symbol table of the function
 void paramInsert(sym_table& table, string id, string type, int size, bool is_init, sym_table* ptr){
 	table.insert(make_pair(id, AddEntry(type, size, is_init, param_offset-size, ptr)));
-	// cout<<id<<" "<<param_offset-size<<"\n";
+	// cout<<id<<" "<<table[id]->size<<" MESSI\n";
+	table[id]->offset = param_offset - size;
 	if(type[type.length()-1] == '*' && !array_dims.empty()){
 		size = 4;
 		vector<int> temp;
@@ -457,7 +469,6 @@ ull GetSize(string id){
 	if(id=="bool") return 4;
   return 8;
 }
-
 
 
 // sym_entry* retTypeAttrEntry(sym_entry* t1){

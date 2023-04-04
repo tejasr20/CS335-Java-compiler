@@ -2,7 +2,7 @@
 #include "3ac.h"
 
 using namespace std;
-
+stack<string> st;
 vector<quad> code;
 long long cntr = 0;
 int f_flag=0;// used for printing stackpointer updation in constructor, because they dont return 
@@ -106,13 +106,29 @@ void backpatch_remaining(){
     }
 }
 
+void pop_function_arguments(string id)
+{
+	sym_table* temp = curr_table;
+	for(auto it: *temp)
+	{
+		// cout<<"emitting "<<it.second->offset<<endl;
+		cout<<" TADA "<<id<<endl;
+		qid tmp= newtemp(it.second->type);
+		emit(qid("=", it.second), qid("popparam",NULL), qid(it.first, NULL), tmp, -1);
+		it.second->place= tmp.first;
+		// cout<<"" /
+	}
+	// return nullptr; // re
+}
+
+
 
 map<int,string> mm;
 vector<int> labelPlace;
 map<int,string> findLabel;
 int labelIdx = 0;
 vector<string> checkArrPtr;
-
+vector<string> checkQualName;
 void print3AC_code(){
     ofstream tac_file;
     tac_file.open("intermediate_3ac.csv",ios::out|ios::trunc);
@@ -144,6 +160,14 @@ void print3AC_code(){
     }
     for(int i = 0;i<code.size();i++){
         string s1 = code[i].op.first;
+
+         if(code[i].op.first != "param"){
+            while(!st.empty()){
+                final_3AC<<"param "<<st.top()<<"\n";
+                st.pop();
+            }
+         }
+
         if(findLabel.find(i)!=findLabel.end() && s1!="RETURN"){
 			// cout<<"YE\n";
             final_3AC<<findLabel[i]<<": ";
@@ -161,13 +185,13 @@ void print3AC_code(){
             checkArrPtr.push_back(code[i].res.first);
         }
         else if(code[i].op.first == "="){
-            if(count(checkArrPtr.begin(), checkArrPtr.end(), code[i].res.first) && !(count(checkArrPtr.begin(), checkArrPtr.end(), code[i].arg1.first))){
+            if((count(checkArrPtr.begin(), checkArrPtr.end(), code[i].res.first) && !(count(checkArrPtr.begin(), checkArrPtr.end(), code[i].arg1.first)))||((count(checkQualName.begin(), checkQualName.end(), code[i].res.first)) && !(count(checkQualName.begin(), checkQualName.end(), code[i].arg1.first)))){
                 final_3AC<<"*("<<code[i].res.first<<") = "<<code[i].arg1.first<<"\n";
             }
-            else if(!(count(checkArrPtr.begin(), checkArrPtr.end(), code[i].res.first)) && (count(checkArrPtr.begin(), checkArrPtr.end(), code[i].arg1.first))){
+            else if((!(count(checkArrPtr.begin(), checkArrPtr.end(), code[i].res.first)) && (count(checkArrPtr.begin(), checkArrPtr.end(), code[i].arg1.first)))||(!(count(checkQualName.begin(), checkQualName.end(), code[i].res.first)) && (count(checkQualName.begin(), checkQualName.end(), code[i].arg1.first)))){
                 final_3AC<<code[i].res.first<<" = *("<<code[i].arg1.first<<")\n";
             }
-            else if((count(checkArrPtr.begin(), checkArrPtr.end(), code[i].res.first)) && (count(checkArrPtr.begin(), checkArrPtr.end(), code[i].arg1.first))){
+            else if(((count(checkArrPtr.begin(), checkArrPtr.end(), code[i].res.first)) && (count(checkArrPtr.begin(), checkArrPtr.end(), code[i].arg1.first)))||((count(checkQualName.begin(), checkQualName.end(), code[i].res.first)) && (count(checkQualName.begin(), checkQualName.end(), code[i].arg1.first)))){
                 final_3AC<<"*("<<code[i].res.first<<") = *("<<code[i].arg1.first<<")\n";
             }
             else{
@@ -175,16 +199,32 @@ void print3AC_code(){
             }
         }
 		 else if(code[i].op.first == "qualname"){
-            final_3AC<<code[i].res.first<<" = *("<<code[i].arg1.first<<" + "<<code[i].arg2.first<<")\n";
+            final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<" + "<<code[i].arg2.first<<"\n";
+            checkQualName.push_back(code[i].res.first);
         }
         else if(code[i].op.first == "param"){
-            final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
+            // final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
+            st.push(code[i].arg1.first);
         }
         else if(code[i].op.first == "CALL"){
 			// sym_entry* sym= Lookup(code[i].arg1.first);
-			final_3AC<<"stackpointer +"<<code[i].arg1.second->paramsize<<"\n";
-            final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<", "<<code[i].arg2.first<<"\n";
-			final_3AC<<"stackpointer -"<<code[i].arg1.second->paramsize<<"\n";
+			if(code[i].arg1.first=="print")
+			{
+				final_3AC<<"stackpointer +"<<8<<"\n";
+			}
+			else final_3AC<<"stackpointer +"<<code[i].arg1.second->paramsize<<"\n";
+            if(code[i].res.first!=""){
+                final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
+                final_3AC<<code[i].res.first<<" = popparam\n";
+            }
+            else{
+                final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
+            }
+			if(code[i].arg1.first=="print")
+			{
+				final_3AC<<"stackpointer -"<<8<<"\n";
+			}
+			else final_3AC<<"stackpointer -"<<code[i].arg1.second->paramsize<<"\n";
         }
         else if(code[i].arg1.first == "IF"){
             if(mm.find(code[i].idx)!=mm.end()){
@@ -232,6 +272,7 @@ void print3AC_code(){
             else{
             
 				final_3AC<<s1.substr(5,s1.size()-13)<<":\nbeginfunc\n";
+				
 				// final_3AC<<"stackpointer +20\n";
             }
 		}

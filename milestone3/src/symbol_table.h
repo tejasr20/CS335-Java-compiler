@@ -21,7 +21,7 @@ struct sym_entry{
 	string type;
 	ull size;
 	bool init;
-	ull offset;
+	ll offset;
 	map<string, sym_entry* > * entry;
 	struct desc { 
 		string reg;
@@ -79,7 +79,7 @@ extern int dump_sym_table;
 void InitSymbolTable();
 sym_entry* find_in_table(string id, sym_table* tab);
 sym_table* find_table(string id);
-sym_entry* AddEntry(string type, ull size, bool init, ull offset);
+sym_entry* AddEntry(string type, ull size, bool init, ll offset);
 void CreateSymbolTable(string name, string type, bool isFun, int offset_flag);
 void InsertPreDefFucn(string func_name, vector<string> type, string ret_type);
 void DeleteFunctionPrototype();
