@@ -16,7 +16,7 @@ public class test10 {
         // Arrays
     
         
-        int arr2[] = {1, 2, 3, 4, 5}; // Declare and initialize an array of integers
+        int arr2[] = new int[5]; // Declare and initialize an array of integers
         arr2[0]= 1;
         System.out.println(arr2[0]);
     }

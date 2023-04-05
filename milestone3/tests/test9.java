@@ -1,37 +1,15 @@
-public class test9
-{
-  private String fname;
-  private String lname;
-  private int age;
+public class test9 {
+  int x;
+  double y;
 
-  
-  public String getFname()
-  {
-    return fname;
+  test9(int x, double y) {
+  		this.x = x;
+      this.y = y;
   }
 
-  
-  public String getLname()
-  {
-    return lname;
+  public static void main(String[] args /*so that we can compile with javac*/) {
+  		test9 a = new test9(2,3.14);
+      System.out.println(a.x);
+      System.out.println(a.y);
   }
-
-  
-  public int getAge()
-  {
-    return age;
-  }
-
-  
-  public void setAge(int ageVal)
-  {
-    age = ageVal;
-  }
-  public static void main(String[] args){
-    test9 person1 = new test9();
-    person1.age=2;
-    person1.setAge(41);
-    System.out.println(person1.getAge());
-  }
-
 }
