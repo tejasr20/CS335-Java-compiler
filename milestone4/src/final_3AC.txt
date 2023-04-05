@@ -1,0 +1,31 @@
+3AC code
+test0.max:
+beginfunc
+stackpointer +24
+_t0 = popparam
+_t1 = popparam
+c = 2
+_t0 = c
+_t2 = _t1 *int _t0
+_t3 = _t1 /int 2
+_t4 = _t2 +int _t3
+c = _t4
+stackpointer -20
+return 1
+endfunc
+test0.fun:
+beginfunc
+stackpointer +0
+stackpointer -20
+return 1
+endfunc
+test0.main:
+beginfunc
+stackpointer +40
+_t5 = popparam
+_t6 = 8
+param _t6
+stackpointer +8
+call allocmem 1
+stackpointer -8
+_t7 = popparam 

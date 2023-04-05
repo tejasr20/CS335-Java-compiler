@@ -1,0 +1,10 @@
+digraph AST {
+	ordering=out;
+	1 [label="PUBLIC(public)" shape=box style=filled color="dodgerblue" fillcolor="lightgreen"];
+	2 [label="PUBLIC(public)" shape=box style=filled color="dodgerblue" fillcolor="lightgreen"];
+	3 [label="STATIC(static)" shape=box style=filled color="dodgerblue" fillcolor="lightgreen"];
+	4 [label="Modifiers"];
+	4 -> 2;
+	4 -> 3;
+	5 [label="IDENTIFIER(main)" shape=box style=filled color="dodgerblue" fillcolor="lightgreen"];
+	6 [label="IDENTIFIER(String)" shape=box style=filled color="dodgerblue" fillcolor="lightgreen"];
