@@ -224,11 +224,17 @@ void print3AC_code(){
             else{
                 final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
             }
-			if(code[i].arg1.first=="print")
-			{
-				final_3AC<<"stackpointer -"<<8<<"\n";
-			}
-			else final_3AC<<"stackpointer -"<<code[i].arg1.second->paramsize<<"\n";
+		}
+		 else if(code[i].op.first == "CALL_constr"){
+			// sym_entry* sym= Lookup(code[i].arg1.first);
+			final_3AC<<"stackpointer +"<<code[i].arg1.second->paramsize<<"\n";
+            if(code[i].res.first!=""){
+                final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
+            }
+            else{
+                final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
+            }
+			final_3AC<<"stackpointer -"<<code[i].arg1.second->paramsize<<"\n";
         }
         else if(code[i].arg1.first == "IF"){
             if(mm.find(code[i].idx)!=mm.end()){

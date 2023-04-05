@@ -2854,14 +2854,14 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 						// here, emitting a -1: index is set to code.size() here. 
 						if($$->type == "char*" && $$->place.second == NULL) _idx = -4;
 						emit(qid("param", NULL), $2->place, qid("", NULL), qid("", NULL), _idx);
-						qid q = newtemp($$->type);
+						// qid q = newtemp($$->type);
 						// $$->place = q;
 						$$->place= $2->place;
 						$$->nextlist.clear();
 						// cout<<"name is "<<$2->temp_name<<"\n";
 						sym_entry* sym= Lookup($2->temp_name);
 						// cout<<"CHECK "<<sym->paramsize<<"\n";
-						emit(qid("CALL", NULL), qid($2->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
+						emit(qid("CALL_constr", NULL), qid($2->temp_name,sym), qid(to_string(currArgs.size()), NULL), qid("",NULL), -1);
 						// currArgs.pop_back();
 						
 						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
@@ -2897,8 +2897,11 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		else type += " " + $2->type;
 		$$->size= 1;
 
+
+		// This is the defualt constructor. Will need to treat this a little differently to a function with no arguments. 
 		$$->isInit = 1;
 		string temp = postfixExpr($2->type,2);
+		cout<<"const "<<temp<<" "<<$2->type<<" "<<className<<endl;
 		string blank_s = "";
 		currArgs.push_back(blank_s ); 
 
@@ -2917,11 +2920,11 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 					else{
 
 					//--3AC
-						qid q = newtemp(temp);
+						// qid q = newtemp(temp);
 						$$->nextlist.clear();
-						sym_entry* sym=	 Lookup($2->temp_name);
+						sym_entry* sym=	 Lookup("CLASS_"+$2->temp_name);
 						// cout<<"CHECK "<<sym->paramsize<<"\n";
-						emit(qid("CALL", NULL), qid($2->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
+						emit(qid("CALL_constr", NULL), qid($2->temp_name,sym), qid(to_string(currArgs.size()), NULL), qid("",NULL), -1);
 						// emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
 						currArgs.pop_back();
 						//if(currArgs.size()>1)currArgs.push_back($$->type) ;
@@ -2936,9 +2939,33 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 			}
 			else{
 				
-				yyerror(("Constructor " + $2->temp_name + " not declared in this scope").c_str());
-				$$->is_error=1;
-			}
+				// yyerror(("Constructor " + $2->temp_name + " not declared in this scope").c_str());
+				// $$->is_error=1;
+				// this means that we are creating an object of a class using a default constructor 
+				if(find(classNamelist.begin(), classNamelist.end(), $2->type)!=classNamelist.end())
+				{
+					// $$->place= qid(sym->place, sym);
+					// is_place_set= true;
+					// class exists! can create object. 
+					//--3AC
+						// qid q = newtemp(temp);
+						$$->nextlist.clear();
+						cout<<"CHECK1 "<<"\n";
+						sym_entry* sym=	 Lookup("CLASS_"+$2->temp_name);
+						if(sym==nullptr) 	cout<<"CHECK "<<"\n";
+					
+						emit(qid("CALL_constr", NULL), qid($2->temp_name,sym), qid(to_string(currArgs.size()), NULL), qid("",NULL), -1);
+						// emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
+						currArgs.pop_back();
+						//if(currArgs.size()>1)currArgs.push_back($$->type) ;
+						// $$->place = q;
+						$$->place= $2->place;
+
+						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
+							func_usage_map[$2->temp_name] = 1;
+						}
+				}
+}
 		}
 		else{
 			if($2->expType==4){
