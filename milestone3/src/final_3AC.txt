@@ -1,4 +1,10 @@
 3AC code
+test0.fun:
+beginfunc
+stackpointer +0
+stackpointer -20
+return 1
+endfunc
 test0.ctor1:
 beginfunc
 stackpointer +32
@@ -6,7 +12,7 @@ _t0 = popparam
 _t1 = popparam
 _t2 = popparam
 _t3 = 0
-_t4 = _t0 + _t3 
+_t4 = _t0 + _t3
 *(_t4) = _t1
 _t5 = 4
 _t6 = _t0 + _t5
@@ -15,7 +21,7 @@ stackpointer -32
 endfunc
 test0.main:
 beginfunc
-stackpointer +40
+stackpointer +60
 _t7 = popparam
 _t8 = 8
 param _t8
@@ -32,5 +38,8 @@ stackpointer -8
 _t10 = 4
 _t11 = _t9 + _t10
 *(_t11) = 4
-stackpointer -40
+_t12 = 8
+_t13 = _t9 + _t12
+n = *(_t13)
+stackpointer -60
 endfunc

@@ -4,42 +4,43 @@ public class test0 {
     // }
 	int a;
 	int b;
-	static int max(int a, int b)
-	{
-		int c=2;
-		a= c;
-		c= b*a + b/2;
-		// c= a+b+c;
-		// return a>b?a:b;
-		return 1;
-	}
+	// static int max(int a, int b)
+	// {
+	// 	int c=2;
+	// 	a= c;
+	// 	c= b*a + b/2;
+	// 	// c= a+b+c;
+	// 	// return a>b?a:b;
+	// 	return 1;
+	// }
 	public static int fun(){return 1;}
 	// public  int min(int a, int b)
 	// {
 	// 	return a<b?a:b;
 	// }
-	// test0(int a1, int b1)
-	// {
-	// 	this.a= a1;
-	// 	this.b= b1;
-	// }
+	test0(int a1, int b1)
+	{
+		this.a= a1;
+		this.b= b1;
+	}
 
-	// test0()
-	// {
-	// 	this.a= 4;
-	// 	this.b= 5;
-	// }
+	test0()
+	{
+		this.a= 4;
+		this.b= 5;
+	}
 
     public static void main(String[] args) {
         // int n=4;
 		// // // n=4;
 		// // // // n[2]= 3;
 		// n= max(5, 4);
-		test0 obj = new test0();
+		test0 obj = new test0(1,2);
+		test0 obj1 = new test0();
 		// test0 obj = new test0();
-		// obj.b= 4;
+		obj.b= 4;
 		// fun();
-		// int n = obj.fun();
+		int n = obj.fun();
 
 		// System.out.println(obj.a);
 		// 
