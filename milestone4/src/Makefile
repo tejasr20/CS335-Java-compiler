@@ -1,11 +1,11 @@
 CC=g++ -std=c++14 -w 
 BIN=./bin
 
-ans: parser.cpp scanner.cpp tree.cpp symbol_table.cpp typecheck.cpp 3ac.cpp
+ans: parser.cpp scanner.cpp tree.cpp symbol_table.cpp typecheck.cpp 3ac.cpp codegen.cpp
 	$(CC) -o $@ $^
 
 scanner.cpp: scanner.l
-	flex -o $@ $^
+	flex -o$@ $^
 	
 parser.cpp: parser.y
 	bison -d -o $@ $^ 
@@ -15,7 +15,9 @@ clean:
 	rm -rf *.csv
 
 allclean:	clean
-	rm -f scanner.cpp parser.hpp parser.cpp 
+	rm -f scanner.cpp parser.hpp parser.h parser.cpp ans
 	rm -rf *.csv
+	rm -rf *.dot
+	rm -rf *.asm
 	rm -rf final_3AC.txt
 

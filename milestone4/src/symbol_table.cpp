@@ -18,6 +18,8 @@ typ_table typ_gst;
 map<typ_table*, typ_table*> typ_parent_table;
 typ_table* curr_typ;
 
+map<string, pair<string, int>> globaldecl;
+
 int max_size = 0;
 extern int param_offset = -4;
 
@@ -65,6 +67,9 @@ sym_entry* AddEntry(string type, ull size, bool init, ll offset, sym_table* ptr)
 	return new_sym;
 }
 
+// int func_local_size(string name){
+// 	return gst[name]->size;
+// }
 
 void CreateSymbolTable(string name, string type, bool isFun, int offset_flag){
 	int b;
@@ -491,3 +496,14 @@ ull GetSize(string id){
 // 	t->is_derefer = 0;
 // 	return t;
 // }
+
+// set global variables
+void setGlobal(){
+	for(auto &it: gst){
+		if(it.second->type.substr(0,2) == "in" || it.second->type.substr(0,2)=="ch"){
+			it.second->is_global = 1;
+			globaldecl.insert(make_pair(it.first,make_pair("0", 0)));
+			if(it.second->size > 4) globaldecl[it.first].second = it.second->size/4;
+		}
+	}
+}

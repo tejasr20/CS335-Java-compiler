@@ -11,10 +11,12 @@
 #include "symbol_table.h"
 #include "typecheck.h"
 #include "3ac.h"
+#include "codegen.h"
 set<string> is_static;
 using namespace std;
 extern int yylineno;
 extern FILE* yyin;
+ofstream code_file;
 FILE* fp;
 extern char* yytext;
 extern int column;
@@ -772,7 +774,7 @@ ClassBody  :  OC CC 	{$$ = create_AST_leaf("{ }", "LITERAL");}
 			}
 		}											
 				   ;													
-		   ;
+		   
 
 ClassBodyDecRec  :  ClassBodyDec 	{$$ = $1;}													
 			  |  ClassBodyDecRec  NEXT_QUAD ClassBodyDec 	{
@@ -2225,7 +2227,7 @@ StmtExpr : ClassCreation 	{$$ = $1;}
 					|  Assign 		{$$ = $1;}												
 					;
 
-		;
+		
 IfThenStmt : IF_CODE NEXT_QUAD Stmt 	{
 		vector<treeNode> v;
 		add_attribute(v, $1, "", 1);
@@ -5035,7 +5037,7 @@ PostDecrementExpr : PostfixExpr MINUSMINUS { // TYPECHECK
 							$$->is_error = 1;
 						}
 				};							
-						;
+						
 
 CastExpr : OS PrimitiveType Dims CS UnaryExpr { // TYPECASTING	
 		vector<treeNode> attr;
@@ -5152,7 +5154,8 @@ int main(int argc, char** argv)
 
 {
 	char* output_dot_file = "graph.dot";
-	char* input_java_file = "test.java";
+	char* input_java_file = "../tests/test0.java";
+	char* file_name = "gen_code.asm";
 	if(argc <= 1){
 		fprintf(stdout, "Please pass arguments for input and output and retry.\n");
 		return 1;
@@ -5208,7 +5211,10 @@ int main(int argc, char** argv)
 	fprintf(dotfile, "}\n"); 	// Dot file has been completely written to 
 	fclose(dotfile);
 	if(!interrupt_compiler){
+		code_file.open(file_name);
+		setGlobal();
 		print3AC_code();
+		genCode();
 		printSymbolTable(&gst, "#Global_Symbol_Table#.csv");
 	}
 	return 0;
