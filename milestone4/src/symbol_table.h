@@ -115,3 +115,4 @@ void AddType(string a, string b);
 string funcProtoLookup(string id);
 void paramInsert(sym_table& table, string id, string type, int size, bool is_init, sym_table* ptr);
 void setGlobal();
+ull getStructsize(string struct_name);

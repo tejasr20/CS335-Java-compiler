@@ -67,9 +67,6 @@ sym_entry* AddEntry(string type, ull size, bool init, ll offset, sym_table* ptr)
 	return new_sym;
 }
 
-// int func_local_size(string name){
-// 	return gst[name]->size;
-// }
 
 void CreateSymbolTable(string name, string type, bool isFun, int offset_flag){
 	int b;

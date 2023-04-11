@@ -1,0 +1,21 @@
+3AC code
+test0.main:
+beginfunc
+stackpointer +36
+_t0 = popparam
+n = 1
+_t1 = ++Sn
+_t2 = n +int 2
+n = _t2
+_t3 = n -int 3
+n = _t3
+_t4 = n *int 4
+n = _t4
+_t5 = n /int 2
+n = _t5
+param n
+stackpointer +8
+CALL print
+_t6 = popparam
+stackpointer -36
+endfunc
