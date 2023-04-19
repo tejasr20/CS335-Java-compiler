@@ -198,19 +198,23 @@ Identifier  :  IDENTIFIER 	{
 											$$->size = GetSize(temp); // returns size of type of the identifier s. 
 											$$->temp_name = string($1); 
 											//--3AC
+											// cout<<s<<
 											sym_entry* sym= Lookup(s);
+											// bool b=1;
+											// if(sym==nullptr) b=0;
+											// cout<<"Searching for "<<s<<" found? "<<b<<endl;
 											// cout<<"In id offsets  "<<string($1)<<" "<<sym->offset<<endl;
 											if(find(classNamelist.begin(), classNamelist.end(), sym->type)!=classNamelist.end())
 											{
 												$$->place= qid(sym->place, sym);
 												is_place_set= true;
 											}
-											if(sym->offset<0) // function argument 
-											{
-												//  cout<<"Is offfset negative?\n";
-												 $$->place= qid(sym->place, sym);
-												 is_place_set= true;
-											}
+											// if(sym->offset<0) // function argument 
+											// {
+											// 	//  cout<<"Is offfset negative?\n";
+											// 	 $$->place= qid(sym->place, sym);
+											// 	 is_place_set= true;
+											// }
 											if(!is_place_set) $$->place = qid(string($1), Lookup(s));
 											$$->nextlist.clear();
 										}
@@ -955,7 +959,7 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 						$1->type= $4->type;
 				}
 				// cout<<"Inserting symbol "<<$4->place.first<<endl;
-				insertSymbol(*curr_table, $1->temp_name, $1->type, $1->size, 1, NULL);
+				insertSymbol(*curr_table, $1->temp_name, $1->type, $1->size, 1, NULL, $1->int_val, $1->str_val);
 				// $$->place= $4->place;
 				sym_entry* sym= Lookup($1->temp_name);
 				if(find(classNamelist.begin(), classNamelist.end(), $1->type)!=classNamelist.end())
@@ -1161,7 +1165,8 @@ MethodDecn  :  MethodHead F MethodBody {
 			string fName = $2->name;
 			string cName= className.substr(6, className.size()-6);
 			string funName= cName+ "_" +fName+ ".csv";
-			string func_3AC= cName+ "."+ fName;
+			// string func_3AC= cName+ "."+ fName;
+			string func_3AC= fName;
 			printSymbolTable(curr_table ,funName);
 			SymbolTableUpdation(fName,1);
 			
@@ -1192,18 +1197,18 @@ F: 				{
 						
 							CreateSymbolTable(funcName, funcType,1, 1);
 							sym_entry* sym= Lookup(funcName);
-							// if(sym==nullptr) cout<<"THIS IS NULL BRO3 "<<funcName<<"\n";
-							emit(qid("FUNC_size",sym),qid("",NULL),qid("",NULL),qid("",NULL),-1);
+							if(sym==nullptr) cout<<"THIS IS NULL BRO3 "<<funcName<<"\n";
+							// emit(qid("FUNC_size",sym),qid("",NULL),qid("",NULL),qid("",NULL),-1);
 							// cout<<" whdih "<<funcName<<endl;
-							if(find(classNamelist.begin(), classNamelist.end(), funcName)!=classNamelist.end())
-							{
-								qid tmp= newtemp("");
-								emit(qid("=", NULL), qid("popparam",NULL), qid(funcName, NULL), tmp, -1);
+							// if(find(classNamelist.begin(), classNamelist.end(), funcName)!=classNamelist.end())
+							// {
+							// 	qid tmp= newtemp("");
+							// 	emit(qid("=", NULL), qid("popparam",NULL), qid(funcName, NULL), tmp, -1);
 								
-								// $$->place= tmp;
-								constructor_temporary= tmp.first;
-							}
-							pop_function_arguments($$->type);
+							// 	$$->place= tmp;
+							// 	constructor_temporary= tmp.first;
+							// }
+							// pop_function_arguments($$->type);
 								// cout<<"F "<<funcName<<"\n";
 							// cout<<"Here "<<sym->type<<endl;
 							// cout<<"Param size is "<<param_size<<endl;
@@ -1319,7 +1324,8 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 				string fName= $1->temp_name;
 				string cName= className.substr(6, className.size()-6);
 				string funName= cName+ "_" +fName+ ".csv";
-				string func_3AC= cName+ "."+ fName;
+				// string func_3AC= cName+ "."+ fName;
+				string func_3AC= fName;
 
 				vector<string> temp = getFuncArgs($1->temp_name);
 				// for(int i=0;i<temp.size();i++)
@@ -1395,7 +1401,8 @@ MethodDecltr  :  MethodIdentifier OS M FormalParamList CS NEXT_QUAD {
 				string fName= $1->temp_name;
 				string cName= className.substr(6, className.size()-6);
 				string funName= cName+ "_" +fName+ ".csv";
-				string func_3AC= cName+ "."+ fName;
+				// string func_3AC= cName+ "."+ fName;
+				string func_3AC= fName;
 				// cout<<"Start\n";
 				vector<string> temp = getFuncArgs($1->temp_name);
 				if((temp.size() == 1 && temp[0] == "#NO_FUNC") || funcArgs == temp){
@@ -2869,6 +2876,7 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
 							func_usage_map[$2->temp_name] = 1;
 						}
+						currArgs.clear();
 					}
 
 				}
@@ -2936,6 +2944,7 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
 							func_usage_map[$2->temp_name] = 1;
 						}
+						currArgs.clear();
 					}
 				}
 			}
@@ -2966,6 +2975,7 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 						if(func_usage_map.find($2->temp_name) != func_usage_map.end()){
 							func_usage_map[$2->temp_name] = 1;
 						}
+						currArgs.clear();
 				}
 }
 		}
@@ -3372,6 +3382,7 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 					vector<string> tempArgs =currArgs;
 					if(fl==0)
 					{
+						// cout<<"Function "<<$1->temp_name<<" "<<funcArgs.size()<<" "<<currArgs.size()<<"\n";
 						for(int i=0;i<funcArgs.size();i++)
 						{
 							if(funcArgs[i]=="...")break;
@@ -3406,7 +3417,8 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						$$->nextlist.clear();
 						// cout<<"name is "<<$1->temp_name<<"\n";
 						sym_entry* sym= Lookup($1->temp_name);
-						//cout<<"CHECK "<<sym->paramsize<<"\n";
+						cout<<"CHECK "<<sym->paramsize<<"\n";
+						if(sym==nullptr) cout<<"NULL\n";
 						if($1->temp_name== "System.out.println") $1->temp_name= "print";
 						emit(qid("CALL", NULL), qid($1->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
 						// currArgs.pop_back();
@@ -5155,7 +5167,7 @@ int main(int argc, char** argv)
 {
 	char* output_dot_file = "graph.dot";
 	char* input_java_file = "../tests/test0.java";
-	char* file_name = "gen_code.asm";
+	char* file_name = "asm.s";
 	if(argc <= 1){
 		fprintf(stdout, "Please pass arguments for input and output and retry.\n");
 		return 1;
@@ -5214,6 +5226,7 @@ int main(int argc, char** argv)
 		code_file.open(file_name);
 		setGlobal();
 		print3AC_code();
+		/* gen_start(); */
 		genCode();
 		printSymbolTable(&gst, "#Global_Symbol_Table#.csv");
 	}

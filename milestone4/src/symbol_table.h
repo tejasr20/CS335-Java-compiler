@@ -11,6 +11,7 @@
 // #include "3AC.h"
 using namespace std;
 typedef long long ll;
+typedef long double ld;
 typedef unsigned long long ull;
 
 #define sym_file 0
@@ -19,9 +20,13 @@ typedef unsigned long long ull;
 
 struct sym_entry{
 	string type;
+	ll int_val = -1;
+	ld real_val = -1;
+	string str_val = "";
 	ull size;
 	bool init;
 	ll offset;
+	string value = "";
 	map<string, sym_entry* > * entry;
 	struct desc { 
 		string reg;
@@ -54,6 +59,7 @@ extern sym_table gst;
 extern struct_sym_table struct_gst;
 extern map<sym_table*, sym_table*> parent_table;
 extern map<struct_sym_table*, struct_sym_table*> struct_parent_table;
+extern vector<sym_table*> class_tables;
 
 extern map<string, ull> struct_size;
 extern map<string, pair< string,vector<string> > > func_arg;
@@ -77,10 +83,12 @@ extern int dump_sym_table;
 
 
 void InitSymbolTable();
+int func_local_size(string name);
+int typeLookup(string struct_name);
 sym_entry* find_in_table(string id, sym_table* tab);
 sym_table* find_table(string id);
 sym_entry* AddEntry(string type, ull size, bool init, ll offset);
-// int func_local_size(string name);
+sym_entry* AddEntry(string type, ull size, bool init, ll offset, sym_table* ptr, ll int_val, string str_val);
 void CreateSymbolTable(string name, string type, bool isFun, int offset_flag);
 void InsertPreDefFucn(string func_name, vector<string> type, string ret_type);
 void DeleteFunctionPrototype();
@@ -102,6 +110,7 @@ int lookupStruct(string struct_name, string id);
 void CreateParameterList();
 void CreateDummyClass();
 void insertSymbol(sym_table& table, string id, string type, ull size, bool is_init, sym_table* ptr);
+void insertSymbol(sym_table& table, string id, string type, ull size, bool is_init, sym_table* ptr, ll int_val, string str_val);
 void insertTypedef(sym_table& table, string id, string type, int size, bool is_init, sym_table* ptr);
 vector<string> getFuncArgs(string id);
 void UpdateInit(string id);
@@ -116,3 +125,4 @@ string funcProtoLookup(string id);
 void paramInsert(sym_table& table, string id, string type, int size, bool is_init, sym_table* ptr);
 void setGlobal();
 ull getStructsize(string struct_name);
+void setGlobal();

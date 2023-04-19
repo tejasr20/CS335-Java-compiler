@@ -1,8 +1,8 @@
 #pragma once
 
-#include "symbol_table.h"
 #include <bits/stdc++.h>
 using namespace std;
+#include "symbol_table.h"
 
 bool checkArrExpr(string a);
 string primExpr(string id);

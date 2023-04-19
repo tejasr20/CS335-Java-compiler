@@ -5,6 +5,7 @@ sym_table gst;
 struct_sym_table struct_gst;
 map<sym_table*, sym_table*> parent_table;
 map<struct_sym_table*, struct_sym_table*> struct_parent_table;
+vector<sym_table*> class_tables;
 
 map<string, ull> struct_size;
 map<string, pair< string,vector<string> > > func_arg;
@@ -67,6 +68,19 @@ sym_entry* AddEntry(string type, ull size, bool init, ll offset, sym_table* ptr)
 	return new_sym;
 }
 
+sym_entry* AddEntry(string type, ull size, bool init, ll offset, sym_table* ptr, ll int_val, string str_val){
+	sym_entry* new_sym = new sym_entry();
+	new_sym->type = type;
+	new_sym->size = size;
+	new_sym->init = init;
+	new_sym->offset = offset;
+	new_sym->entry = ptr;
+	new_sym->int_val = int_val;
+	new_sym->str_val = str_val;
+
+	return new_sym;
+}
+
 
 void CreateSymbolTable(string name, string type, bool isFun, int offset_flag){
 	int b;
@@ -102,6 +116,11 @@ void CreateSymbolTable(string name, string type, bool isFun, int offset_flag){
 		{
 			blockSz.push(0);
 		}
+		if(*curr_table==gst)
+		{
+			cout<<"F\n";
+			class_tables.push_back(new_table);
+		}
 		parent_table.insert(make_pair(new_table, curr_table));
 		struct_parent_table.insert(make_pair(new_struct_table, curr_struct_table));
 		typ_parent_table.insert(make_pair(new_typ, curr_typ));
@@ -117,7 +136,8 @@ void CreateSymbolTable(string name, string type, bool isFun, int offset_flag){
 		else cl=0;
 		table_names[curr_table]= name;
 		(*parent_table[curr_table]).erase(s2);
-		(*parent_table[curr_table]).insert(make_pair(name,AddEntry(s1+s,0,1,Loffset.top(), NULL)));
+		// (*parent_table[curr_table]).insert(make_pair(name,AddEntry(s1+s,0,1,Loffset.top(), NULL)));
+		(*parent_table[curr_table]).insert(make_pair(name,AddEntry(s1+s,0,1,Loffset.top(), curr_table)));
 		Loffset.pop();
 	}
 }
@@ -171,8 +191,16 @@ void SymbolTableUpdation(string id,  int offset_flag){
 	}
 }
 
+// find total size of local variables a function
+int func_local_size(string name){
+	// return gst[name]->size;
+	return (*class_tables[0])[name]->size;
+}
+
 sym_entry* Lookup(string id){
+	// cout<<"Looking up "<<id<<endl;
 	sym_table* temp = curr_table;
+	// if((curr_table)==class_tables[0]) cout<<"It is class table\n";
 	while(temp){
 		if((*temp).find(id)!=(*temp).end()) 
 		{
@@ -180,6 +208,7 @@ sym_entry* Lookup(string id){
 		}
 		temp = parent_table[temp];
 	}
+	// cout<<"THissucks\n";
 	return nullptr; // returns nullptr if the element is not present in the symbol table 
 }
 
@@ -348,6 +377,12 @@ void insertSymbol(sym_table& table, string id, string type, ull size, bool is_in
 	Goffset.top()+=size;
 }
 
+void insertSymbol(sym_table& table, string id, string type, ull size, bool is_init, sym_table* ptr, ll int_val, string str_val){
+	table.insert(make_pair(id, AddEntry(type, size, is_init, Goffset.top(), ptr, int_val, str_val)));
+	blockSz.top()+=size;
+	Goffset.top()+=size;
+}
+
 vector<string> getFuncArgs(string id){
 	vector<string> temp;
 	temp.push_back("#NO_FUNC");
@@ -463,6 +498,16 @@ void insertTypedef(sym_table& table, string id, string type, int size, bool is_i
 	Goffset.top()+=size;
 }
 
+// look up any user defined type (structs or unions)
+int typeLookup(string struct_name){
+	struct_sym_table* temp = curr_struct_table;
+	while(temp){
+		if((*temp).find(struct_name)!=(*temp).end()) return 1;
+		temp = struct_parent_table[temp];
+	}
+	return 0;
+}
+
 ull GetSize(string id){
 	if(integer_types.find(id)!=integer_types.end())
 	{
@@ -470,6 +515,23 @@ ull GetSize(string id){
 	}
 	if(id=="bool") return 4;
   return 8;
+}
+
+
+// set global variables
+void setGlobal(){
+	for(auto &it: gst){
+		if(it.second->type.substr(0,3) == "int" || it.second->type.substr(0,4)=="char"){
+			it.second->is_global = 1;
+			globaldecl.insert(make_pair(it.first,make_pair("0", 0)));
+			if(it.second->size > 4) globaldecl[it.first].second = it.second->size/4;
+		}
+	}
+	// cout<<"Global variables";
+	// for(auto it: globaldecl)
+	// {
+	// 	cout<<it.first<<" "<<it.second.first<<" "<<it.second.second<<"\n";
+	// }
 }
 
 
@@ -493,14 +555,3 @@ ull GetSize(string id){
 // 	t->is_derefer = 0;
 // 	return t;
 // }
-
-// set global variables
-void setGlobal(){
-	for(auto &it: gst){
-		if(it.second->type.substr(0,2) == "in" || it.second->type.substr(0,2)=="ch"){
-			it.second->is_global = 1;
-			globaldecl.insert(make_pair(it.first,make_pair("0", 0)));
-			if(it.second->size > 4) globaldecl[it.first].second = it.second->size/4;
-		}
-	}
-}

@@ -7,13 +7,13 @@ using namespace std;
 #include <vector>
 #include <unordered_map>
 #include "tree.h"
-// #include "parser.h"
-#if __has_include("parser.h")
-# include "parser.h"
-#endif
-#if __has_include("parser.hpp")
-# include "parser.hpp"
-#endif
+#include "parser.h"
+// #if __has_include("parser.h")
+// # include "parser.h"
+// #endif
+// #if __has_include("parser.hpp")
+// # include "parser.hpp"
+// #endif
 
 #include "symbol_table.h"
 int yylex();

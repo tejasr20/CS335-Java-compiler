@@ -19,8 +19,8 @@ typedef struct{
 	string type;
 	int isInit;
 	ll int_val= -1;
-	ld real_val;
-	string str_val;
+	ld real_val = -1;
+	string str_val = "";
 	vector<int> dims;
 	int is_error = 0;
 	int expType=0;	// 1 -> Variable, 2 -> Array, 3-> Function, 4 -> Constant, 5 -> string  	

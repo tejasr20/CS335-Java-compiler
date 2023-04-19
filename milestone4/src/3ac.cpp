@@ -99,25 +99,25 @@ void backpatch_remaining(){
 	// cout<<"Backpatching rem "<<code.size()<<"\n";
     // i--;
     while(code[i].op.first.substr(0,5)!="FUNC_"){
-        if(code[i].op.first =="GOTO" && code[i].idx==0) code[i].idx = j;
+        if(code[i].op.first =="GOTO" && code[i].idx==0) code[i].idx = j-1;
 		// cout<<code[i].op.first<<","<<code[i].arg1.first<<","<<code[i].arg2.first<<","<<code[i].res.first<<","<<code[i].idx<<","<<i<<endl;
         i--;
-        
     }
 }
 
 void pop_function_arguments(string id)
 {
 	sym_table* temp = curr_table;
+    // vector<int> 
 	for(auto it: *temp)
 	{
 		// cout<<"emitting "<<it.second->offset<<endl;
 		if(it.second->offset<0)
-
 		{
 			qid tmp= newtemp(it.second->type);
-			// cout<<" TADA "<<id<<endl;
+			cout<<" TADA "<<id<<endl;
 			emit(qid("=", it.second), qid("popparam",NULL), qid(it.first, NULL), tmp, -1);
+            // emit( qid ("=", Lookup("=")), sym_typ1, qid("", NULL), arg1, -1);
 			it.second->place= tmp.first;
 		}
 		// cout<<"" /
