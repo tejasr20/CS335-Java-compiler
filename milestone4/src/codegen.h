@@ -51,3 +51,4 @@ string char_to_int(string sym);
 void print_global_data();
 string get_type_size(string sym);
 void get_parameters(quad* instr);
+void heap_allocate(quad* instr);

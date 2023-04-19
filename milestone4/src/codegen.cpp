@@ -114,14 +114,14 @@ void add_op(quad* instr){
             //code_file << "\tmovl "<<temp_reg << ", "<< mem2<<"\n";
             code_file << "\tmovl "<<mem2 << ", "<< temp_reg<<"\n";
             //code_file << "\timul "<<temp_reg << ", "<< size<<"\n";
-            code_file << "\timul "<<size << ", "<< temp_reg<<"\n";
+            code_file << "\timul $"<<size << ", "<< temp_reg<<"\n";
             mem2 = temp_reg;
         }
         else if(!is_pointerType(instr->arg1.second->type) && is_pointerType(instr->arg2.second->type) ){
             int size = give_size(instr->arg1.second);
             //switched
             //code_file << "\timul "<<reg1 << ", "<< size<<"\n";
-            code_file << "\timul "<<size << ", "<< reg1<<"\n";
+            code_file << "\timul $"<<size << ", "<< reg1<<"\n";
         }
         //switched   
         //code_file << "\tadd " << reg1 << ", " << mem2 <<endl;
@@ -624,12 +624,22 @@ void call_func(quad *instr){
     for(auto it: reg_desc){
         free_reg(it.first);
     }
-
+    int i;
+    if(instr->op.first=="NEW") 
+    {
+        int space= stoi(instr->arg1.first);
+        i=1; // number of arguments to malloc 
+         code_file<<"\tmovl $"<<space<<", %edi\n"; // why is this needed?
+         free_reg("%eax");
+        code_file<<"\tcall malloc@PLT\n";
+        return;
+    }
+    else i = stoi(instr->arg2.first);
     int curr_reg = 0;
-    int i = stoi(instr->arg2.first);
     int sz = i;
 
     sym_entry* func_entry = Lookup(instr->arg1.first);
+    if(instr->op.first=="NEW") cout<<"here1\n";
     string ret_type = "";
     if(func_entry) ret_type = func_entry->type.substr(5, func_entry->type.length()-5);
     
@@ -648,7 +658,7 @@ void call_func(quad *instr){
         {
               free_reg("%esi");
             stringlabels.insert({string_counter, "J%dy"});
-         string_counter++;
+             string_counter++;
         }
         else if(typeLookup(params.top().second->type)){
             int type_size = GetSize(params.top().second->type), type_offset = params.top().second->offset;
@@ -676,7 +686,6 @@ void call_func(quad *instr){
                         code_file<<"\tmovl " <<-(i+4)<<"(%rbp), "<<regs[num]<<"\n";
                         num++;
                     }
-                    
                 }
                 else{
                     int num=0;
@@ -702,7 +711,7 @@ void call_func(quad *instr){
         }
         else{
             string mem = get_mem_location(&params.top(), &empty_var, instr->idx, -1);
-           
+            
             cout<<params.top().first<<" param\n";
             // if(reg_desc.find(mem) == reg_desc.end() && mem.substr(0,5) != "dword") mem = "dword "+mem;
             // code_file<<"\tpushq "<<mem<<"\n";
@@ -717,7 +726,6 @@ void call_func(quad *instr){
                 code_file<<"\tmovl "<<mem<<", "<<regs[i-1]<<"\n";
                 instr->res.second->addr_descriptor.reg = regs[i-1];
             }
-           
             // code_file<<"\tmovl "<<regs[i-1]<<", "<<mem<<"\n";
             // mem ->regs[i-1]
           
@@ -749,6 +757,7 @@ void call_func(quad *instr){
         code_file<<"\tcall printf@PLT\n";
         LC_count++;
     }
+    
     else code_file<<"\tcall "<<instr->arg1.first<<"\n";
     
     if(!typeLookup(ret_type)){
@@ -1197,7 +1206,6 @@ void genCode(){
         if(!visited[index++]){
             continue;
         }
-
         code_file << it->second <<":\n";
         auto it1 = it;
         it1++;
@@ -1234,6 +1242,7 @@ void genCode(){
             else if(instr.op.first == "unary&" || instr.op.first == "unary*") pointer_op(&instr);
             else if(instr.op.first[0] == '+')    add_op(&instr);
             else if(instr.op.first == "=")   assign_op(&instr);
+            else if(instr.op.first == "NEW") heap_allocate(&instr);
             else if(instr.op.first.substr(0, 5) == "FUNC_" && instr.op.first[(instr.op.first.size() - 3)] == 'd'){
                 end_basic_block();
                 // code_file << "\txor %eax, %eax\n";
@@ -1289,9 +1298,14 @@ void genCode(){
     
 }
 
-void get_parameters(quad* instr)
-{
+// void get_parameters(quad* instr)
+// {
     
+// }
+
+void heap_allocate(quad* instr)
+{
+    call_func(instr);
 }
 
 // print the data section for the asm file

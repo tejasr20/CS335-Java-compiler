@@ -1,33 +1,15 @@
 3AC code
-sex:
-beginfunc
-stackpointer -20
-return a
-endfunc
 main:
 beginfunc
-a = 3
-t = 1
-_t0 = a > 2
-if _t0 goto L1
-goto L2
-L1: param "Checking if\n"
-stackpointer +8
-CALL print
-_t1 = popparam
-_t2 = t +int 1
-t = _t2
-_t3 = a -int 1
-a = _t3
-goto L3
-L2: param "Checking else\n"
-stackpointer +8
-CALL print
-_t4 = popparam
-param "Always print\n"
-stackpointer +8
-CALL print
-_t5 = popparam
+_t0 = 12
+param _t0
+stackpointer +12
+call allocmem 1
+stackpointer -12
+_t1 = popparam 
+_t2 = 1 * 4
+_t3 = _t1 + _t2
+*(_t3) = 5
 stackpointer -20
-L3: return 0
+return 0
 endfunc

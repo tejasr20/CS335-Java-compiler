@@ -28,6 +28,10 @@ s:	asm.s
 	gcc -o asm asm.s
 	./asm
 
+s1:	asm1.s
+	gcc -o asm1 asm1.s
+	./asm1
+
 allclean:	clean
 	rm -f scanner.cpp parser.hpp parser.h parser.cpp ans
 	rm -rf *.csv

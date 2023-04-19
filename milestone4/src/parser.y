@@ -3741,11 +3741,10 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 			temp*=$3->dims[i];
 		}
 		// emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), tmp, -1);
-			emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), tmp1, tmp, -1);	
+		emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), tmp1, tmp, -1);	
 		$$->place= tmp1;
 		// emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), qid("", NULL), -1);
 		// $$->place = tmp;
-
 		// $$= $3;
 	}						
 						| NEW ClassOrIntfaceType DimExprs Dims {
@@ -5166,7 +5165,10 @@ int main(int argc, char** argv)
 
 {
 	char* output_dot_file = "graph.dot";
-	char* input_java_file = "../tests/test0.java";
+	char* input_java_file ;
+	int newflag=0;
+	char* file_name1;
+	//"../tests/test0.java";;
 	char* file_name = "asm.s";
 	if(argc <= 1){
 		fprintf(stdout, "Please pass arguments for input and output and retry.\n");
@@ -5223,6 +5225,14 @@ int main(int argc, char** argv)
 	fprintf(dotfile, "}\n"); 	// Dot file has been completely written to 
 	fclose(dotfile);
 	if(!interrupt_compiler){
+		cout<<input_java_file<<endl;
+		/* if(input_java_file=="../tests/test1.java\0") 
+		{
+			cout<<"File name changed\n";
+			char *file_name1= "asm1.s";
+			code_file.open(file_name1);
+		} */
+		/* if(newflag) code_file.open(file_name1); */
 		code_file.open(file_name);
 		setGlobal();
 		print3AC_code();
@@ -5232,7 +5242,6 @@ int main(int argc, char** argv)
 	}
 	return 0;
 }
-
 
 void print_warning(){
 	cout<<"\033[1;36mWarning: \033[0m";
