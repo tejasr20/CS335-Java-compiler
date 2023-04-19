@@ -3730,8 +3730,9 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 		$$->dims= $3->dims;
 		//cout<<"NEW "<<$3->dims.size()<<" "<<$3->dims[0]<<"\n";
 
-		qid tmp = newtemp($$->type);
-		qid tmp1 = newtemp($$->type);
+		qid q = newtemp($$->type);
+		$$->place= q;
+		// qid tmp1 = newtemp($$->type);
 		// cout<<"If found kdhe "<<if_found<<"\n";
 		int temp=1;
 		//cout<<"SISZEE "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
@@ -3741,8 +3742,9 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 			temp*=$3->dims[i];
 		}
 		// emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), tmp, -1);
-		emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), tmp1, tmp, -1);	
-		$$->place= tmp1;
+		// emit(qid("new", NULL), qid(to_string(temp*GetSize($2->type)), NULL), tmp1, tmp, -1);	
+		emit(qid("CALL", NULL), qid("NEW",NULL),qid(to_string(temp*GetSize($2->type)), NULL), q, -1);
+		// $$->place= tmp1;
 		// emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), qid("", NULL), -1);
 		// $$->place = tmp;
 		// $$= $3;

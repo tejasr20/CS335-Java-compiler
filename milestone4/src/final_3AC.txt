@@ -1,15 +1,7 @@
 3AC code
 main:
 beginfunc
-_t0 = 12
-param _t0
-stackpointer +12
-call allocmem 1
-stackpointer -12
-_t1 = popparam 
-_t2 = 1 * 4
-_t3 = _t1 + _t2
-*(_t3) = 5
+u = 0
 stackpointer -20
 return 0
 endfunc

@@ -99,7 +99,7 @@ void backpatch_remaining(){
 	// cout<<"Backpatching rem "<<code.size()<<"\n";
     // i--;
     while(code[i].op.first.substr(0,5)!="FUNC_"){
-        if(code[i].op.first =="GOTO" && code[i].idx==0) code[i].idx = j-1;
+        if(code[i].op.first =="GOTO" && code[i].idx==0) code[i].idx = j;
 		// cout<<code[i].op.first<<","<<code[i].arg1.first<<","<<code[i].arg2.first<<","<<code[i].res.first<<","<<code[i].idx<<","<<i<<endl;
         i--;
     }
