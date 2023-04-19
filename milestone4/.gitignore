@@ -9,3 +9,16 @@ parser.*pp
 *.csv
 *.out
 ans
+*.s
+*.o
+codegen1.cpp
+codegen2.cpp
+codegen1.h
+codegen2.h
+sam.c
+*.asm
+check.cpp
+../tests/*.java
+tests/test0.class
+    ../../.vscode/
+
