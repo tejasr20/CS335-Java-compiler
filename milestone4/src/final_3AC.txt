@@ -7,26 +7,13 @@ return _t0
 endfunc
 main:
 beginfunc
-n = 7
-_t1 = n > 6
-if _t1 goto L1
-goto L2
-L1: param "IF\n"
-stackpointer +8
-stackpointer +0
-CALL print
+param _t1
+stackpointer +12
+CALL malloc
 _t2 = popparam
-goto L3
-L2: param "else\n"
-stackpointer +8
-stackpointer +0
-CALL print
-_t3 = popparam
-param "both\n"
-stackpointer +8
-stackpointer +0
-CALL print
-_t4 = popparam
+arr = _t2
+_t3 = arr + 1
+*(_t3) = 5
 stackpointer -20
-L3: return 0
+return 0
 endfunc

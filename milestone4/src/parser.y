@@ -170,14 +170,15 @@ Identifier  :  IDENTIFIER 	{
 										}
 										else if(temp.back() == '*'){ 
 											$$->expType = 2;  // 2 is array
-											sym_entry* sym=  Lookup(string($1));
-											if(sym==nullptr) 
-											{
-												yyerror((string($1) + " array not declared before access").c_str());
-											}
-											// cout<<"Array id "<<sym->place<<"\n";
-											$$->place= qid(sym->place, sym);
-											is_place_set= true;
+											// cout<<"Lookin up array\n";
+											// sym_entry* sym=  Lookup(string($1));
+											// if(sym==nullptr) 
+											// {
+											// 	yyerror((string($1) + " array not declared before access").c_str());
+											// }
+											// // cout<<"Array id "<<sym->place<<"\n";
+											// $$->place= qid(sym->place, sym);
+											// is_place_set= true;
 										}
 										else $$->expType = 1; // 1 is variable 
 										if(temp.substr(0,5)=="FUNC_" && temp.back() == '#'){
@@ -200,6 +201,7 @@ Identifier  :  IDENTIFIER 	{
 											//--3AC
 											// cout<<s<<
 											sym_entry* sym= Lookup(s);
+											cout<<"Looking up "<<s<<"\n";
 											// bool b=1;
 											// if(sym==nullptr) b=0;
 											// cout<<"Searching for "<<s<<" found? "<<b<<endl;
@@ -1006,6 +1008,8 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 								else arr_dimensions[$1->temp_name][i]= $4->dims[i];
 							}
 							// dims.clear();
+							assign_exp("=", $1->type,$1->type, $4->type, $1->place, $4->place);
+							cout<<"Assigned\n";
 						}
 					}
 					else
@@ -1040,9 +1044,10 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 					}
 				}
 				else{
-					// cout<<"IN heredbwid"<<$1->type<<"\n";
+					
 					if(find(classNamelist.begin(), classNamelist.end(), $1->type)==classNamelist.end())
 					{
+							cout<<"IN heredbwid"<<$1->type<<"\n";
 						assign_exp("=", $1->type,$1->type, $4->type, $1->place, $4->place);
 					}
 					// $$->intval= $4->intval;
@@ -1065,7 +1070,7 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 		}
 		else $$->is_error = 1;
 		initializer_list_values.clear();
-	}										
+	}	
 					;
 
 VariableDecltrId  :  IDENTIFIER		{

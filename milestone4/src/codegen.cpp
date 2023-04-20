@@ -776,12 +776,19 @@ void call_func(quad *instr){
     {   
         cout<<"here6\n";
         code_file<<"\tmovq $"<<stoi(instr->arg2.first)<<", %rdi\n"; // why is this needed?
+        // code_file<<"\tmovq $0, %rax\n"; // why is this needed?
         code_file<<"\tcall malloc@PLT\n";
+        string res_mem = getReg(&instr->res, &empty_var, &instr->arg1, -1);
+        code_file<<"\tmovq %rax, %rbx\n";
+
+        // string arg1_mem = getReg(&instr->arg1, &empty_var, &instr->res, -1);
+        // free_reg("%rax");
+        // code_file = 
     }
     else code_file<<"\tcall "<<instr->arg1.first<<"\n";
     
     if(!typeLookup(ret_type)){
-        // cout<<instr->arg1.first<<" yes\n";
+        cout<<instr->arg1.first<<" yes\n";
         reg_desc["%rax"].insert(instr->res);
         instr->res.second->addr_descriptor.reg = "%rax";
     }
@@ -821,9 +828,10 @@ void assign_op(quad* instr){
         globaldecl[instr->res.first].first = instr->arg1.first;
         return;
     }
-
+    cout<<"ass1\n";
     // *x = 1
     if(instr->res.second->is_derefer){
+        cout<<"ass2\n";
         string res_mem = getReg(&instr->res, &empty_var, &instr->arg1, -1);
         string arg1_mem = getReg(&instr->arg1, &empty_var, &instr->res, -1);
         res_mem = "(" + res_mem + ")";
@@ -835,10 +843,12 @@ void assign_op(quad* instr){
         }
         //switched
 //code_file<<"\tmovq "<<res_mem<<", "<<arg1_mem<<"\n";
+cout<<"arr op "<<arg1_mem<<endl;
 code_file<<"\tmovq "<<arg1_mem<<", "<<res_mem<<"\n";
     }
     // x = 1
     else if(is_integer(instr->arg1.first)){
+        cout<<"ass3\n";
         string mem = get_mem_location(&instr->res, &instr->arg1, instr->idx, 1);
         if(reg_desc.find(mem) != reg_desc.end()){
             free_reg(mem);
@@ -854,7 +864,7 @@ code_file<<"\tmovq "<<arg1_mem<<", "<<res_mem<<"\n";
         for(auto it: reg_desc){
             free_reg(it.first);
         }
-
+cout<<"ass4\n";
         string reg = getTemporaryReg(&empty_var, instr->idx);
         int res_offset = instr->res.second->offset, temp_offset = instr->arg1.second->offset;
         int struct_size = getStructsize(instr->res.second->type);
@@ -869,7 +879,7 @@ code_file<<"\tmovq "<<arg1_mem<<", "<<res_mem<<"\n";
     // x = y
     else{
         string reg = getReg(&instr->arg1, &instr->res, &empty_var, instr->idx);
-        
+        cout<<"ass5\n";
         if(instr->arg1.second->is_derefer){
             //swithched
             //code_file<<"\tmovq "<<reg <<",  %("<<reg<<")"<<"\n";
@@ -877,6 +887,7 @@ code_file<<"\tmovq "<<arg1_mem<<", "<<res_mem<<"\n";
             update_reg_desc(reg, &instr->res);        
         }
         else {
+            cout<<"ass5\n";
             reg_desc[reg].insert(instr->res);
             string prev_reg = instr->res.second->addr_descriptor.reg;
             if(prev_reg != "") reg_desc[prev_reg].erase(instr->res);
@@ -884,6 +895,7 @@ code_file<<"\tmovq "<<arg1_mem<<", "<<res_mem<<"\n";
         }
 
         if(instr->res.first=="array_init"){
+            cout<<"ass6\n";
             string tem = get_mem_location(&instr->res,&empty_var,instr->idx,-1);
             //code_file << "\tmovq " << tem << ", " << reg << "\n";
             code_file << "\tmovq " << reg << ", " << tem << "\n";
@@ -891,19 +903,22 @@ code_file<<"\tmovq "<<arg1_mem<<", "<<res_mem<<"\n";
         }
 
         if(instr->res.second->type[instr->res.second->type.length()-1] == '*'){
+            cout<<"ass7\n";
             pointed_by[addr_pointed_to[instr->arg1]] = 1;
         }
 
         if(pointed_by[instr->res.second->offset]){
+            cout<<"ass8\n";
             string reg_stored = instr->res.second->addr_descriptor.reg;
             instr->res.second->addr_descriptor.reg = "";
             reg_desc[reg_stored].erase(instr->res);
             string str = get_mem_location(&instr->res, &instr->arg1, instr->idx, 0);
             //switched
+            cout<<"str is "<<str<<endl;
 //code_file<<"\tmovq "<< str <<", "<<reg_stored<<"\n";
 code_file<<"\tmovq "<<", "<< str <<"\n";
         }
-
+    cout<<"ass9\n";
         instr->res.second->addr_descriptor.stack = 0;
     }
 }
@@ -1154,10 +1169,12 @@ code_file<<"\tmovq "<<temp_reg<<", "<< str <<"\n";
         }
         else {
              cout<<"arr3\n";
-            mem = get_mem_location(&instr->arg1, &instr->arg2, instr->idx, 0);
+             // commented here 
+            // mem = get_mem_location(&instr->arg1, &instr->arg2, instr->idx, 0);
             //switched
 //code_file<<"\tmovq "<<reg<<", "<<mem<<"\n";
-code_file<<"\tmovq "<<mem<<", "<<reg<<"\n";
+// code_file<<"\tmovq "<<mem<<", "<<reg<<"\n";
+// code_file<<"\tmovq "<<mem<<", "<<reg<<"\n";
         }
         
         exclude_this.insert(reg);
@@ -1270,7 +1287,11 @@ void genCode(){
             else if(instr.op.first == "unary&" || instr.op.first == "unary*") pointer_op(&instr);
             else if(instr.op.first[0] == '+')    add_op(&instr);
             else if(instr.op.first == "=")   assign_op(&instr);
-            else if(instr.arg1.first == "malloc") heap_allocate(&instr);
+            else if(instr.arg1.first == "malloc") 
+            {
+                heap_allocate(&instr);
+                idx++;
+            }
             else if(instr.op.first.substr(0, 5) == "FUNC_" && instr.op.first[(instr.op.first.size() - 3)] == 'd'){
                 end_basic_block();
                 // code_file << "\txor %rax, %rax\n";
@@ -1342,6 +1363,11 @@ void genCode(){
 void heap_allocate(quad* instr)
 {
     call_func(instr);
+}
+
+void arrays(quad* instr)
+{
+    
 }
 
 // print the data section for the asm file
