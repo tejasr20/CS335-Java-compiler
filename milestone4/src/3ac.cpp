@@ -21,6 +21,7 @@ void emit(qid op, qid arg1, qid arg2, qid res, int idx){
 void backpatch(vector<int>& bplist, int target){
     for(int i=0;i<bplist.size(); i++){
         code[bplist[i]].idx = target;
+        if(target>0) cout<<"Yes!\n";
     }
 }
 

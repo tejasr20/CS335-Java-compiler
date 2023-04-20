@@ -1636,7 +1636,7 @@ string getReg(qid* sym, qid* result, qid* sym2, int idx){
                 //swithched
                 //code_file << "\tmovq " << str << ", " << reg <<endl;
                 cout<<"printing "<<sym->first<<" "<<sym->second->addr_descriptor.reg<<endl;
-                code_file << "\tmovq2 " << reg << ", " << str <<endl;
+                code_file << "\tmovq " << reg << ", " << str <<endl;
                 temp.push_back(it);
             }
         }

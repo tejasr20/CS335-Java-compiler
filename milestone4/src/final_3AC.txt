@@ -1,26 +1,17 @@
 3AC code
 main:
 beginfunc
-cond = 2
-_t0 = cond > 1
+a = 1
+L3: _t0 = a < 5
 if _t0 goto L1
 goto L2
-L1: param "if"
+L1: param "hi"
 stackpointer +8
 stackpointer +0
 CALL print
 _t1 = popparam
+_t2 = ++Sa
 goto L3
-L2: param "else"
-stackpointer +8
-stackpointer +0
-CALL print
-_t2 = popparam
-param "both"
-stackpointer +8
-stackpointer +0
-CALL print
-_t3 = popparam
 stackpointer -20
-L3: return 0
+L2: return 0
 endfunc
