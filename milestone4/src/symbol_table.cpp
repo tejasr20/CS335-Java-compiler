@@ -262,6 +262,8 @@ void KeywordInsertion(){
 	InsertPreDefFucn("System.out.println", type, "int");
 	InsertPreDefFucn("System.err.println", type, "int");
 	InsertPreDefFucn("System.in.read", type, "int");
+	type = {"int", "int"};
+	InsertPreDefFucn("malloc", type, "void*");
 
 }
 

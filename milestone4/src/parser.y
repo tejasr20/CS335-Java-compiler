@@ -3217,37 +3217,38 @@ ArrOp : Name OSQ Expr CSQ 	{
 					yyerror(("Array index3 " + $3->temp_name +  " is out of bound").c_str());
 		
 				}
-					
-				emit(qid("*", NULL), $3->place , qid(to_string(t*GetSize(base_type)),NULL), temp_var1, -1);
+				emit(qid("[ ]", NULL), $1->place , $3->place, temp_var1, -1);
+				// emit(qid("[ ]", NULL), $3->place , qid(to_string(t*GetSize(base_type)),NULL), temp_var1, -1);
 				//returns the symbol table entry to the temporary variable 
 				//array_dims is a vector<int> in sym_entry*
 				// $$->place= temp_var1;
 
-				if(arr_index[$1->temp_name]==arr_dimensions[$1->temp_name].size()) 
-				{
-					qid temp_var = newtemp($$->type); 
-					temp_var.second->array_dims = $1->place.second->array_dims;
-					if(temp_var.second->array_dims.size()) temp_var.second->array_dims.erase(temp_var.second->array_dims.begin());
-					// $$->place = temp_var;
-					// emit(qid("[ ]", NULL), $1->place, $3->place, temp_var, -1);	
-					// cout<<"Name place is "<<$1->place.first<<"\n";
-					sym_entry* sym= Lookup($1->temp_name);
-					if(sym==nullptr)
-					{
-						yyerror(($1->temp_name + ": array not defined").c_str());
-					}
-					emit(qid("[ ]", sym), $1->place, temp_var1, temp_var, -1);	
-					$$->nextlist.clear();
-					$$->place= temp_var;
-					arr_index[$1->temp_name]=0;
-				}
-				else
-				{
+				// if(arr_index[$1->temp_name]==arr_dimensions[$1->temp_name].size()) 
+				// {
+				// 	// qid temp_var = newtemp($$->type); 
+				// 	// temp_var.second->array_dims = $1->place.second->array_dims;
+				// 	// if(temp_var.second->array_dims.size()) temp_var.second->array_dims.erase(temp_var.second->array_dims.begin());
+				// 	// $$->place = temp_var;
+				// 	// emit(qid("[ ]", NULL), $1->place, $3->place, temp_var, -1);	
+				// 	// cout<<"Name place is "<<$1->place.first<<"\n";
+				// 	sym_entry* sym= Lookup($1->temp_name);
+				// 	if(sym==nullptr)
+				// 	{
+				// 		yyerror(($1->temp_name + ": array not defined").c_str());
+				// 	}
+				// 	// emit(qid("[ ]", sym), $1->place, temp_var1, temp_var, -1);	
+				// 	emit(qid("[ ]", sym), $1->place, $3->place, temp_var, -1);	
+				// 	$$->nextlist.clear();
+				// 	$$->place= temp_var;
+				// 	arr_index[$1->temp_name]=0;
+				// }
+				// else
+				// {
 					$$->place= temp_var1;
 					$$->nextlist.clear();
 					// $$->temp_name= $1->place.first;
 					$$->temp_name= $1->temp_name;
-				}
+				// }/
 			}
 			else{
 				yyerror(($1->temp_name +  " is not an array").c_str());
@@ -3295,7 +3296,7 @@ ArrOp : Name OSQ Expr CSQ 	{
 					t*= arr_dimensions[$1->temp_name][i];
 				}
 				
-				emit(qid("*", NULL), $3->place , qid(to_string(t*GetSize(base_type)),NULL), temp_var1, -1);
+				emit(qid("[ ]", NULL), $3->place , qid(to_string(t*GetSize(base_type)),NULL), temp_var1, -1);
 				qid temp_var = newtemp($$->type);
 				temp_var.second->array_dims = $1->place.second->array_dims;
 				if(temp_var.second->array_dims.size()) temp_var.second->array_dims.erase(temp_var.second->array_dims.begin());
@@ -3730,6 +3731,17 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 		$$->dims= $3->dims;
 		//cout<<"NEW "<<$3->dims.size()<<" "<<$3->dims[0]<<"\n";
 
+		$$->nextlist.clear();
+		int _idx = -1;
+		backpatch($3->nextlist, code.size());
+		if($3->type == "char*" && $3->place.second == NULL) _idx = -4;
+		qid temp1= newtemp($2->type);
+		// sym_entry* s= ;
+		// s->type= $2->type;
+		// s->isArray=1;
+		// s->size= $2->size;
+		emit(qid("param", NULL), temp1, qid("", NULL), qid("", NULL), _idx);
+
 		qid q = newtemp($$->type);
 		$$->place= q;
 		// qid tmp1 = newtemp($$->type);
@@ -3741,9 +3753,12 @@ NewArr : NEW PrimitiveType DimExprs Dims 	{
 		{
 			temp*=$3->dims[i];
 		}
+		// s->int_val= temp*GetSize($2->type);
+		// s->offset= 
+		sym_entry* sym= Lookup("malloc");
 		// emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), tmp, -1);
 		// emit(qid("new", NULL), qid(to_string(temp*GetSize($2->type)), NULL), tmp1, tmp, -1);	
-		emit(qid("CALL", NULL), qid("NEW",NULL),qid(to_string(temp*GetSize($2->type)), NULL), q, -1);
+		emit(qid("CALL", NULL), qid("malloc",sym),qid(to_string(temp*GetSize($2->type)), NULL), q, -1);
 		// $$->place= tmp1;
 		// emit(qid("NEW", NULL), qid(to_string(temp*GetSize($2->type)), NULL), qid("", NULL), qid("", NULL), -1);
 		// $$->place = tmp;

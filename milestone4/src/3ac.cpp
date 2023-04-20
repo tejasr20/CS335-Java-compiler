@@ -99,7 +99,7 @@ void backpatch_remaining(){
 	// cout<<"Backpatching rem "<<code.size()<<"\n";
     // i--;
     while(code[i].op.first.substr(0,5)!="FUNC_"){
-        if(code[i].op.first =="GOTO" && code[i].idx==0) code[i].idx = j;
+        if(code[i].op.first =="GOTO" && code[i].idx==0) code[i].idx = j-1;
 		// cout<<code[i].op.first<<","<<code[i].arg1.first<<","<<code[i].arg2.first<<","<<code[i].res.first<<","<<code[i].idx<<","<<i<<endl;
         i--;
     }
@@ -216,6 +216,10 @@ void print3AC_code(){
 			{
 				final_3AC<<"stackpointer +"<<8<<"\n";
 			}
+            if(code[i].arg1.first=="malloc")
+			{
+				final_3AC<<"stackpointer +"<<stoi(code[i].arg2.first)<<"\n";
+			}
 			else final_3AC<<"stackpointer +"<<code[i].arg1.second->paramsize<<"\n";
             if(code[i].res.first!=""){
                 final_3AC<<code[i].op.first<<" "<<code[i].arg1.first<<"\n";
@@ -256,15 +260,15 @@ void print3AC_code(){
                 final_3AC<<"goto "<<mm[code[i].idx]<<"\n";
             }
         }
-		else if(s1=="NEW")
-		{
-			final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<endl;
-			final_3AC<<"param "<<code[i].res.first<<endl;
-			final_3AC<<"stackpointer +"<<code[i].arg1.first<<endl;
-			final_3AC<<"call allocmem 1"<<endl;
-			final_3AC<<"stackpointer -"<<code[i].arg1.first<<endl;
-			final_3AC<<code[i].arg2.first<<" = popparam "<<endl;
-		}
+		// else if(s1=="NEW")
+		// {
+		// 	final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<endl;
+		// 	final_3AC<<"param "<<code[i].res.first<<endl;
+		// 	final_3AC<<"stackpointer +"<<code[i].arg1.first<<endl;
+		// 	final_3AC<<"call allocmem 1"<<endl;
+		// 	final_3AC<<"stackpointer -"<<code[i].arg1.first<<endl;
+		// 	final_3AC<<code[i].arg2.first<<" = popparam "<<endl;
+		// }
         else if(code[i].arg1.first != "" && code[i].op.first != "" && code[i].arg2.first !="" && code[i].res.first!=""){
             final_3AC<<code[i].res.first<<" = "<<code[i].arg1.first<<" "<<code[i].op.first<<" "<<code[i].arg2.first<<"\n";
         }
