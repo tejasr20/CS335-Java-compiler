@@ -1,17 +1,36 @@
 3AC code
+test9.ctor1:
+beginfunc
+_t0 = 0
+_t1 =  + _t0
+*(_t1) = x
+_t2 = 4
+_t3 =  + _t2
+*(_t3) = y
+stackpointer -24
+endfunc
 main:
 beginfunc
-a = 1
-L3: _t0 = a < 5
-if _t0 goto L1
-goto L2
-L1: param "hi"
+_t4 = 12 NEW _t5
+param _t5
+param 0
+param 2
+stackpointer +12
+CALL_constr test9
+stackpointer -12
+_t6 = 0
+_t7 = _t5 + _t6
+param _t7
 stackpointer +8
 stackpointer +0
 CALL print
-_t1 = popparam
-_t2 = ++Sa
-goto L3
-stackpointer -20
-L2: return 0
+_t8 = popparam
+_t9 = 4
+_t10 = _t5 + _t9
+param _t10
+stackpointer +8
+stackpointer +0
+CALL print
+_t11 = popparam
+stackpointer -56
 endfunc
