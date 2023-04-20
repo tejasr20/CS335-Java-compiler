@@ -201,7 +201,7 @@ Identifier  :  IDENTIFIER 	{
 											//--3AC
 											// cout<<s<<
 											sym_entry* sym= Lookup(s);
-											cout<<"Looking up "<<s<<"\n";
+											
 											// bool b=1;
 											// if(sym==nullptr) b=0;
 											// cout<<"Searching for "<<s<<" found? "<<b<<endl;
@@ -330,7 +330,7 @@ FloatingPoint  :   DOUBLE 	{
 ClassType  :  ClassOrIntfaceType  	{
 						$$ = $1;
 						qid tmp = newtemp($$->type);
-						qid tmp1 = newtemp($$->type);
+						// qid tmp1 = newtemp($$->type);
 						// cout<<"If found kdhe "<<if_found<<"\n";
 						int temp=1;
 						// cout<<"SISZEEC "<<$3->dims[0]<<" "<<$3->dims.size()<<endl;
@@ -344,8 +344,9 @@ ClassType  :  ClassOrIntfaceType  	{
 						if (sym ==nullptr){
 							yyerror(("Field size not found in class "+ className).c_str());
 						}
-						emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), tmp1, tmp, -1);	
-						$$->place= tmp1;
+						// emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), tmp1, tmp, -1);	
+						emit(qid("CALL", NULL), qid("malloc",sym),qid(to_string(sym->fieldsize), NULL), tmp, -1);
+						$$->place= tmp;
 						$$->expType= 3;
 						// qid tmp1 = newtemp($$->type);
 						// emit(qid("NEW", sym), qid(to_string(sym->fieldsize), NULL), qid("", NULL), tmp, -1);	
@@ -1009,7 +1010,7 @@ VariableDecltr  :  VariableDecltrId 	{$$ = $1;
 							}
 							// dims.clear();
 							assign_exp("=", $1->type,$1->type, $4->type, $1->place, $4->place);
-							cout<<"Assigned\n";
+							
 						}
 					}
 					else
@@ -1202,7 +1203,7 @@ F: 				{
 						
 							CreateSymbolTable(funcName, funcType,1, 1);
 							sym_entry* sym= Lookup(funcName);
-							if(sym==nullptr) cout<<"THIS IS NULL BRO3 "<<funcName<<"\n";
+							// if(sym==nullptr) cout<<"THIS IS NULL BRO3 "<<funcName<<"\n";
 							// emit(qid("FUNC_size",sym),qid("",NULL),qid("",NULL),qid("",NULL),-1);
 							// cout<<" whdih "<<funcName<<endl;
 							// if(find(classNamelist.begin(), classNamelist.end(), funcName)!=classNamelist.end())
@@ -1612,13 +1613,14 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			// printSymbolTable(curr_table ,fName + ".csv");
 			string cName= className.substr(6, className.size()-6);
 			string constName= cName+ "_ctor"+ to_string(constructor_num)+ ".csv";
-			string constr_3AC=  cName+ ".ctor"+ to_string(constructor_num);
+			string constr_3AC=  cName;
 			printSymbolTable(curr_table ,constName);
 			constructor_num++;
 			SymbolTableUpdation(fName,1);
 			sym_entry* sym= Lookup(fName);
 			
 			sym->funcsize= sym->size;
+
 			// if(sym==nullptr) cout<<"THIS IS NULL BRODIJ "<<funcName<<"\n";
 			// emit(qid("FUNC_" + func_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
 			emit(qid("FUNC_" +  constr_3AC + " end :", sym), qid(to_string(sym->size), NULL), qid("", NULL), qid("", NULL), -1);
@@ -1661,7 +1663,7 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			string fName = $3->name;
 			string cName= className.substr(6, className.size()-6);
 			string constName= cName+ "_ctor"+ to_string(constructor_num)+ ".csv";
-			string constr_3AC=  cName+ ".ctor"+ to_string(constructor_num);
+			string constr_3AC=  cName;
 			printSymbolTable(curr_table ,constName);
 			constructor_num++;
 			// printSymbolTable(curr_table ,fName + ".csv");
@@ -1708,7 +1710,7 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			string fName = $2->name;
 			string cName= className.substr(6, className.size()-6);
 			string constName= cName+ "_ctor"+ to_string(constructor_num)+ ".csv";
-			string constr_3AC=  cName+ ".ctor"+ to_string(constructor_num);
+			string constr_3AC=  cName;
 			printSymbolTable(curr_table ,constName);
 			// printSymbolTable(curr_table ,"_ctor" +to_string(constructor_num)+ ".csv");
 			constructor_num++;
@@ -1756,13 +1758,14 @@ ConstructorDecn  :  Modifiers ConstructorDecltr Throws F ConstructorBody {
 			string fName = $3->name;
 			string cName= className.substr(6, className.size()-6);
 			string constName= cName+ "_ctor"+ to_string(constructor_num)+ ".csv";
-			string constr_3AC=  cName+ ".ctor"+ to_string(constructor_num);
+			string constr_3AC=  cName;
 			printSymbolTable(curr_table ,constName);
 			// printSymbolTable(curr_table ,"ctor" +to_string(constructor_num)+ ".csv");
 			constructor_num++;
+			sym_entry* sym= Lookup(cName);
 			// printSymbolTable(curr_table ,fName + ".csv");
 			SymbolTableUpdation(fName,1);
-			emit(qid("FUNC_" +  constr_3AC + " end :", NULL), qid("", NULL), qid("", NULL), qid("", NULL), -1);
+			emit(qid("FUNC_" +  constr_3AC + " end :", sym), qid("", NULL), qid("", NULL), qid("", NULL), -1);
 			backpatch_remaining();
 			constructor_temporary="";
 		}
@@ -1799,7 +1802,8 @@ ConstructorDecltr  :  ConstructorName OS M FormalParamList CS  NEXT_QUAD	{
 				$$->type = $1->type;
 				$$->size = GetSize($$->type);
 				string cName= className.substr(6, className.size()-6);
-				string constr_3AC=  cName+ ".ctor"+ to_string(constructor_num);
+				string constr_3AC=  cName;
+				
 				// constructor_num++;
 				vector<string> temp = getFuncArgs($1->temp_name);
 				if(temp.size() == 1 && temp[0] == "#NO_FUNC"){
@@ -1858,7 +1862,7 @@ ConstructorDecltr  :  ConstructorName OS M FormalParamList CS  NEXT_QUAD	{
 				$$->type = $1->type;
 				$$->size = GetSize($$->type);
 				string cName= className.substr(6, className.size()-6);
-				string constr_3AC=  cName+ ".ctor"+ to_string(constructor_num);
+				string constr_3AC=  cName;
 				// constructor_num++;
 				vector<string> temp = getFuncArgs($1->temp_name);
 				if((temp.size() == 1 && temp[0] == "#NO_FUNC") || funcArgs == temp){
@@ -2166,7 +2170,7 @@ BlockStmts : BlockStmts NEXT_QUAD BlockStmt 	{
 		if($1->is_error || $3->is_error)	{
 			$$->is_error = 1;
 		}
-		cout<<"Statement was backpatched with"<<$2<<"\n";
+		// cout<<"Statement was backpatched with"<<$2<<"\n";
         backpatch($1->nextlist, $2);
         $$->nextlist = $3->nextlist;
 		$1->caselist.insert($1->caselist.end(), $3->caselist.begin(), $3->caselist.end());
@@ -2264,7 +2268,7 @@ IfThenStmt : IF_CODE NEXT_QUAD Stmt 	{
 			$$->is_error = 1;
 		}
 
-		cout<<"If was backpatched with "<<$2<<endl;
+		// cout<<"If was backpatched with "<<$2<<endl;
         backpatch($1->truelist, $2);
 		$3->nextlist.insert($3->nextlist.end(), $1->falselist.begin(), $1->falselist.end());// merges 
         $$->nextlist= $3->nextlist;
@@ -2931,7 +2935,7 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 		// This is the defualt constructor. Will need to treat this a little differently to a function with no arguments. 
 		$$->isInit = 1;
 		string temp = postfixExpr($2->type,2);
-		cout<<"const "<<temp<<" "<<$2->type<<" "<<className<<endl;
+		// cout<<"const "<<temp<<" "<<$2->type<<" "<<className<<endl;
 		string blank_s = "";
 		currArgs.push_back(blank_s ); 
 
@@ -2981,9 +2985,9 @@ ClassCreation : NEW ClassType OS ArgLst CS 	{  // TYPECHECK
 					//--3AC
 						// qid q = newtemp(temp);
 						$$->nextlist.clear();
-						cout<<"CHECK1 "<<"\n";
+						// cout<<"CHECK1 "<<"\n";
 						sym_entry* sym=	 Lookup("CLASS_"+$2->temp_name);
-						if(sym==nullptr) 	cout<<"CHECK "<<"\n";
+						// if(sym==nullptr) 	cout<<"CHECK "<<"\n";
 					
 						emit(qid("CALL_constr", NULL), qid($2->temp_name,sym), qid(to_string(currArgs.size()), NULL), qid("",NULL), -1);
 						// emit(qid("CALL", NULL),qid($$->temp_name,NULL), qid("0", NULL), q, -1);
@@ -3436,8 +3440,8 @@ MethodInvocation : Name OS ArgLst CS 		{   // TYPECHECK
 						$$->nextlist.clear();
 						// cout<<"name is "<<$1->temp_name<<"\n";
 						sym_entry* sym= Lookup($1->temp_name);
-						cout<<"CHECK "<<sym->paramsize<<"\n";
-						if(sym==nullptr) cout<<"NULL\n";
+						// cout<<"CHECK "<<sym->paramsize<<"\n";
+						// if(sym==nullptr) cout<<"NULL\n";
 						if($1->temp_name== "System.out.println") $1->temp_name= "print";
 						emit(qid("CALL", NULL), qid($1->temp_name,sym), qid(to_string(currArgs.size()), NULL), q, -1);
 						// currArgs.pop_back();
@@ -3812,7 +3816,7 @@ DimExprs : DimExprs DimExpr {
 		 | DimExpr 			{	$$ = $1;
 								vector<int> temp;
 								temp.push_back($1->int_val);
-								cout<<"INTVAL "<<$1->int_val;
+								// cout<<"INTVAL "<<$1->int_val;
 							 	$$->dims= temp;
 							 }												
 		 ;
@@ -5240,7 +5244,7 @@ int main(int argc, char** argv)
 			}
 			else
 			{
-				output_dot_file = argv[i+1]; //output file name
+				file_name = argv[i+1]; //output file name
 				i++;
 			}
 		}
@@ -5260,7 +5264,7 @@ int main(int argc, char** argv)
 	fprintf(dotfile, "}\n"); 	// Dot file has been completely written to 
 	fclose(dotfile);
 	if(!interrupt_compiler){
-		cout<<input_java_file<<endl;
+		// cout<<input_java_file<<endl;
 		/* if(input_java_file=="../tests/test1.java\0") 
 		{
 			cout<<"File name changed\n";

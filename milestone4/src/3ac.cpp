@@ -21,7 +21,7 @@ void emit(qid op, qid arg1, qid arg2, qid res, int idx){
 void backpatch(vector<int>& bplist, int target){
     for(int i=0;i<bplist.size(); i++){
         code[bplist[i]].idx = target;
-        if(target>0) cout<<"Yes!\n";
+        // if(target>0) cout<<"Yes!\n";
     }
 }
 
@@ -116,7 +116,7 @@ void pop_function_arguments(string id)
 		if(it.second->offset<0)
 		{
 			qid tmp= newtemp(it.second->type);
-			cout<<" TADA "<<id<<endl;
+			// cout<<" TADA "<<id<<endl;
 			emit(qid("=", it.second), qid("popparam",NULL), qid(it.first, NULL), tmp, -1);
             // emit( qid ("=", Lookup("=")), sym_typ1, qid("", NULL), arg1, -1);
 			it.second->place= tmp.first;

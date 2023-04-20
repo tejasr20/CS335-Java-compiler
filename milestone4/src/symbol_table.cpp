@@ -118,7 +118,7 @@ void CreateSymbolTable(string name, string type, bool isFun, int offset_flag){
 		}
 		if(*curr_table==gst)
 		{
-			cout<<"F\n";
+			// cout<<"F\n";
 			class_tables.push_back(new_table);
 		}
 		parent_table.insert(make_pair(new_table, curr_table));

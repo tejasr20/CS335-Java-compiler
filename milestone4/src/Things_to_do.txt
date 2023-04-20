@@ -1,4 +1,0 @@
-3AC for post and pre increment is added, add support
-Add support for modifiers. 
-Complete array support and array 3AC. 
-Add support for inheritance and multiple classes.
